@@ -1,7 +1,5 @@
 import argparse
-import os
 
-from enum import Enum, auto
 from typing import Final
 
 from inflator import __version__
