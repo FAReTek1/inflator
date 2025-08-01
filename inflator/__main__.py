@@ -4,14 +4,12 @@ import os
 from enum import Enum, auto
 from typing import Final
 
+from inflator.util import ansi
+
 
 class Modes(Enum):
     INSTALL = auto()
     SYNC = auto()
-
-
-def ansi(code):
-    return f"\u001b[{code}m"
 
 
 ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}"
@@ -27,6 +25,7 @@ def main():
 
         parser.add_argument("-i", "--input", action="store", dest="input")
         parser.add_argument("install", nargs="?")
+        parser.add_argument("pargs", nargs="*")
 
         return parser.parse_args()
 
@@ -41,7 +40,11 @@ def main():
 
     match mode:
         case Modes.INSTALL:
-            print("Installing libraries")
+            pkgs = args.pargs
+
+            from inflator.install import install
+            install(pkgs)
+
         case Modes.SYNC:
             print("Synchronizing libraries")
         case _:
