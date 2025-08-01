@@ -6,6 +6,8 @@ from enum import Enum, auto
 
 from furl import furl
 
+from inflator import gstoml
+
 APPDATA = os.getenv('LOCALAPPDATA') + "\\faretek"
 
 
@@ -45,14 +47,19 @@ class Package:
         return self.raw
 
     def install(self):
-        print(f"\t - Installing {self}")
+        print(f"- Installing {self}")
 
         def install_local():
-            print("\t\tLocal Package")
-            print(f"\t\tInstalling into {APPDATA}")
+            print("\tLocal Package")
+            print("\tFetching goboscript.toml/inflate.toml")
+            print(f"\tInstalling into {APPDATA}")
+
 
         def install_git():
-            print("\t\tGit Package")
+            print("\tGit Package")
+            # https://api.github.com/repos/{usernae}/{reponame}/tags
+            # https://api.github.com/repos/{username}/{reponame}/zipball/refs/tags/v{tagname}
+
 
         match self.type:
             case PackageTypes.LOCAL:
