@@ -5,6 +5,7 @@ import pprint
 import io
 import shutil
 import tomllib
+import fnmatch
 
 from typing import Self, Optional
 from dataclasses import dataclass
@@ -58,7 +59,7 @@ class Package:
 
         assert f.host
         segments = f.path.segments
-        assert len(segments) == 2  # must be: username, reponame
+        assert len(segments) == 2  # must be: username, reponame. **Remove any trailing slashes!**
 
         self.username, self.reponame = segments
 
@@ -67,13 +68,23 @@ class Package:
     def __str__(self):
         return self.raw
 
-    def _fetch_newest_tag(self) -> str:
+    def _fetch_newest_tag(self, pattern="*") -> str:
         print("\tFetching version name from gh...")
         tags = (httpx.get(f"https://api.github.com/repos/{self.username}/{self.reponame}/tags")
                 .raise_for_status()
                 .json())
-        newest_tag = tags[0]
-        return newest_tag["name"]
+
+        matched_tag = None
+        for tag in tags:
+            name = tag["name"]
+            if fnmatch.fnmatch(name, pattern):
+                matched_tag = tag
+                break
+
+
+        assert isinstance(matched_tag, dict)
+
+        return matched_tag["name"]
 
     @property
     def file_location(self):
@@ -89,7 +100,12 @@ class Package:
 
             # need to read inflator.toml to fetch name and version
             print("\tReading inflator.toml for name/version")
-            raw_toml = open(os.path.join(self.raw, "inflator.toml")).read()
+            try:
+                raw_toml = open(os.path.join(self.raw, "inflator.toml")).read()
+            except FileNotFoundError as e:
+                e.add_note(f"No inflator.toml file! This is required for local packages. "
+                           f"Either make a inflator.toml file, or check your input directory")
+                raise e
 
             data = tomllib.loads(raw_toml)
 
@@ -99,14 +115,19 @@ class Package:
             print(f"\tLoaded {self.reponame!r} version={self.version!r}")
             print(f"\tInstalling into {self.file_location}")
 
-            shutil.copytree(self.raw, self.file_location, dirs_exist_ok=True)
+            if os.path.exists(self.file_location):
+                shutil.rmtree(self.file_location)
+            shutil.copytree(self.raw, os.path.join(self.file_location, self.reponame))
 
         def install_git():
+            # it says git but it means github
             print("\tGit Package")
             self._parse_gh_link()
 
             if not self.version:
                 self.version = self._fetch_newest_tag()
+            else:
+                self.version = self._fetch_newest_tag(self.version)
 
             def fetch_data():
                 print(f"\tFetching version {self.version!r}")
@@ -139,11 +160,22 @@ class Package:
 
         toml_gs = None
         toml_if = None
-        if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
-            print(f"\tReading {fp}")
-            toml_gs = open(fp).read()
-        if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
-            print("\tReading {fp}")
-            toml_if = open(fp).read()
 
-        print(f"{toml_gs!r}\n{toml_if!r}")
+        data = {"dependencies": None}  # Prevent errors when trying to delete "dependencies" if it doesn't exist
+        deps = {}
+        if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
+            print(f"\tReading {fp!r}")
+            gs_data, gs_deps = gstoml.parse_gstoml(tomllib.load(open(fp, "rb")))
+            data |= gs_data
+            deps |= gs_deps
+
+        if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
+            print(f"\tReading {fp!r}")
+            if_data, if_deps = gstoml.parse_iftoml(tomllib.load(open(fp, "rb")))
+            data |= if_data
+            deps |= if_deps
+
+        del data["dependencies"]  # only use deps
+
+        print(f"\t{data=}")
+        print(f"\t{deps=}")
