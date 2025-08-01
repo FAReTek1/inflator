@@ -1,19 +1,19 @@
+import os
+
 from typing import Self, Optional
 from dataclasses import dataclass
 from enum import Enum, auto
 
 from furl import furl
 
+APPDATA = os.getenv('LOCALAPPDATA') + "\\faretek"
+
+
 def install(pkgs: list[str]):
     print(f"INSTALL: {pkgs}")
 
     for pkg in pkgs:
-        install_pkg(pkg)
-
-
-def install_pkg(pkg: str):
-    pkg: Package = Package.parse(pkg)
-    print(f"\t - Installing {pkg}")
+        Package.parse(pkg).install()
 
 
 class PackageTypes(Enum):
@@ -43,3 +43,19 @@ class Package:
 
     def __str__(self):
         return self.raw
+
+    def install(self):
+        print(f"\t - Installing {self}")
+
+        def install_local():
+            print("\t\tLocal Package")
+            print(f"\t\tInstalling into {APPDATA}")
+
+        def install_git():
+            print("\t\tGit Package")
+
+        match self.type:
+            case PackageTypes.LOCAL:
+                install_local()
+            case PackageTypes.GIT:
+                install_git()
