@@ -22,6 +22,7 @@ def install(raw: str, version: str = None, *, upgrade: bool = False, ids: list[s
     pkg = Package.parse(raw)
     pkg.version = version
     pkg.install(upgrade=upgrade, ids=ids)
+    return pkg
 
 
 class PackageTypes(Enum):
@@ -178,23 +179,7 @@ class Package:
         root, dirs, _ = next(os.walk(self.file_location))
         root_dir = root + dirs[0]
 
-        data = {"dependencies": None}  # Prevent errors when trying to delete "dependencies" if it doesn't exist
-        deps = {}
-        if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
-            print(f"\tReading {fp}")
-            gs_data, gs_deps = gstoml.parse_gstoml(tomllib.load(open(fp, "rb")))
-            data |= gs_data
-            deps |= gs_deps
-            self.backpack_only = True
-
-        if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
-            print(f"\tReading {fp}")
-            if_data, if_deps = gstoml.parse_iftoml(tomllib.load(open(fp, "rb")))
-            data |= if_data
-            deps |= if_deps
-            self.backpack_only = False
-
-        del data["dependencies"]  # only use deps
+        data, deps, self.backpack_only = get_toml_data(root_dir)
 
         print(f"\t{data=}")
         print(f"\t{deps=}")
@@ -204,8 +189,9 @@ class Package:
 
 
 def search_for_package(reponames: Optional[list[str] | str] = None,
-                       versions: Optional[list[str] | str] = "*",
-                       usernames: Optional[list[str] | str] = None) -> list[str]:
+                       versions: Optional[list[str] | str] = None,
+                       usernames: Optional[list[str] | str] = None,
+                       *, msg: bool=True) -> list[str]:
     """
     Find all repos that fit the query
     :return: list[str] - list of string in format {username}\\{reponame}\\{version}
@@ -224,7 +210,8 @@ def search_for_package(reponames: Optional[list[str] | str] = None,
     versions = handle_l(versions)
     usernames = handle_l(usernames)
 
-    print(f"Searching for {reponames!r} {versions} by {usernames!r}")
+    if msg:
+        print(f"Searching for {reponames!r} {versions} by {usernames!r}")
     _, local_usernames, _ = next(os.walk(APPDATA_FARETEK_PKGS))
 
     results: list[str] = []
@@ -239,3 +226,26 @@ def search_for_package(reponames: Optional[list[str] | str] = None,
                 results.append(f"{username}\\{reponame}\\{version}")
 
     return results
+
+
+def get_toml_data(root_dir):
+    data = {"dependencies": None}  # Prevent errors when trying to delete "dependencies" if it doesn't exist
+    deps = {}
+    backpack_only = None
+    if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
+        print(f"\tReading {fp}")
+        gs_data, gs_deps = gstoml.parse_gstoml(tomllib.load(open(fp, "rb")))
+        data |= gs_data
+        deps |= gs_deps
+        backpack_only = True
+
+    if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
+        print(f"\tReading {fp}")
+        if_data, if_deps = gstoml.parse_iftoml(tomllib.load(open(fp, "rb")))
+        data |= if_data
+        deps |= if_deps
+        backpack_only = False
+
+    del data["dependencies"]  # only use deps
+
+    return data, deps, backpack_only

@@ -1,4 +1,5 @@
 import argparse
+import os
 import tomllib
 
 from typing import Final
@@ -8,6 +9,7 @@ from inflator.install import install
 from inflator.gstoml import parse_gstoml, parse_iftoml
 from inflator.util import ansi
 from inflator.install import search_for_package
+from inflator.sync import sync
 
 GITHUB_REPO: Final[str] = "no github link rn"
 ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"
@@ -63,7 +65,9 @@ def main():
             if args.V:
                 print(f"Inflate {__version__}")
             else:
-                print("Synchronizing libraries")
-                print(f"{args.command=} {args.__dict__=}")
+                cwd = os.getcwd()
+                if args.input:
+                    cwd = args.input
 
-                print(f"Not implemented\n{ERROR_MSG}")
+                sync(cwd)
+
