@@ -17,10 +17,11 @@ from inflator import gstoml
 from inflator.util import APPDATA_FARETEK_PKGS
 
 
-def install(raw: str, version: str = None, *, upgrade: bool = False):
+def install(raw: str, version: str = None, *, upgrade: bool = False, ids: list[str] = None):
+    # ids is a list to keep track of packages that have been imported to prevent circular dependencies
     pkg = Package.parse(raw)
     pkg.version = version
-    pkg.install(upgrade=upgrade)
+    pkg.install(upgrade=upgrade, ids=ids)
 
 
 class PackageTypes(Enum):
@@ -87,7 +88,14 @@ class Package:
     def file_location(self):
         return f"{APPDATA_FARETEK_PKGS}\\{self.username}\\{self.reponame}\\{self.version}\\"
 
-    def install(self, *, upgrade: bool = False):
+    @property
+    def id(self):
+        return f"{self.username}\\{self.reponame}\\{self.version}"
+
+    def install(self, *, upgrade: bool = False, ids: list[str] = None):
+        if ids is None:
+            ids = []
+
         if not upgrade:
             # search for package
             ...
@@ -159,6 +167,9 @@ class Package:
         assert self.reponame
         assert self.version
 
+        assert self.id not in ids  # Make sure you do not have circular dependencies
+        ids.append(self.id)
+
         root, dirs, _ = next(os.walk(self.file_location))
         root_dir = root + dirs[0]
 
@@ -184,7 +195,7 @@ class Package:
         print(f"\t{deps=}")
 
         for _, attrs in deps.items():
-            install(attrs["raw"], attrs["version"])
+            install(attrs["raw"], attrs["version"], ids=ids)
 
 
 def search_for_package(reponames: Optional[list[str] | str] = None,
@@ -194,6 +205,7 @@ def search_for_package(reponames: Optional[list[str] | str] = None,
     Find all repos that fit the query
     :return: list[str] - list of string in format {username}\\{reponame}\\{version}
     """
+
     def handle_l(ls):
         # handle list so that it can work nicely. None -> [], single string -> [str]
         if isinstance(ls, str):
