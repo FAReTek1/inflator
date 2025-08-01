@@ -1,4 +1,6 @@
+import logging
 import os
+import re
 
 from typing import Self, Optional
 from dataclasses import dataclass
@@ -11,11 +13,9 @@ from inflator import gstoml
 APPDATA = os.getenv('LOCALAPPDATA') + "\\faretek"
 
 
-def install(pkgs: list[str]):
-    print(f"INSTALL: {pkgs}")
-
-    for pkg in pkgs:
-        Package.parse(pkg).install()
+def install(raw: str):
+    pkg = Package.parse(raw)
+    pkg.install()
 
 
 class PackageTypes(Enum):
@@ -54,12 +54,10 @@ class Package:
             print("\tFetching goboscript.toml/inflate.toml")
             print(f"\tInstalling into {APPDATA}")
 
-
         def install_git():
             print("\tGit Package")
             # https://api.github.com/repos/{usernae}/{reponame}/tags
             # https://api.github.com/repos/{username}/{reponame}/zipball/refs/tags/v{tagname}
-
 
         match self.type:
             case PackageTypes.LOCAL:

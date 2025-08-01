@@ -7,47 +7,40 @@ from typing import Final
 from inflator.util import ansi
 
 
-class Modes(Enum):
-    INSTALL = auto()
-    SYNC = auto()
-
-
 GITHUB_REPO: Final[str] = "no github link rn"
 ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"
 
 
 def main():
-    def get_args():
-        parser = argparse.ArgumentParser(
-            prog="inflate",
-            description="Manage libraries for use in goboscript",
-            epilog=f':)'
-        )
+    parser = argparse.ArgumentParser(
+        prog="inflate",
+        description="Manage libraries for use in goboscript",
+        epilog=f':)'
+    )
+    subparsers = parser.add_subparsers(dest="command")
 
-        parser.add_argument("-i", "--input", action="store", dest="input")
-        parser.add_argument("install", nargs="?")
-        parser.add_argument("pargs", nargs="*")
+    parser.add_argument("-i", "--input", action="store")
+    parser.add_argument("-V", action="store_true")
 
-        return parser.parse_args()
+    install_parser = subparsers.add_parser("install", help="Install a package")
+    install_parser.add_argument("parg", nargs="?")
+    install_parser.add_argument("-V", nargs="?", dest="install_version")
 
-    def resolve_args():
-        nonlocal args, mode
-        if args.install:
-            mode = Modes.INSTALL
+    # args, _ = parser.parse_known_args()
+    args = parser.parse_args()
 
-    args = get_args()
-    mode = Modes.SYNC
-    resolve_args()
+    print(args.__dict__)
 
-    match mode:
-        case Modes.INSTALL:
-            pkgs = args.pargs
+    match args.command:
+        case "install":
+            ...
+            # raw = args.parg
 
-            from inflator.install import install
-            install(pkgs)
+            # from inflator.install import install
+            # install(raw)
 
-        case Modes.SYNC:
-            print("Synchronizing libraries")
-            raise Exception(f"Not implemented\n{ERROR_MSG}")
         case _:
-            print(f"Uh, how did we get here?\n{mode=}, {args.__dict__=}\n{ERROR_MSG}")
+            print("Synchronizing libraries")
+            print(f"{args.command=} {args.__dict__=}")
+
+            # raise Exception(f"Not implemented\n{ERROR_MSG}")
