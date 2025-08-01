@@ -13,6 +13,12 @@ def parse_gstoml(toml: dict) -> toml_return:
         version = split[-1]
         url = '=='.join(split[:-1])
 
+        if url == '':
+            # we are probably dealing with an old goboscript package, using the '@' syntax
+            split = src.split("@")
+            version = split[-1]
+            url = '@'.join(split[:-1])
+
         deps[name] = {"raw": url, "version": version}
 
     return {}, deps

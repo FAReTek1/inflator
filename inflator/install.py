@@ -80,7 +80,12 @@ class Package:
                 matched_tag = tag
                 break
 
-        assert isinstance(matched_tag, dict)
+        if matched_tag is None:
+            if tags:
+                raise ValueError("Matching tag could not be found, but alternatives available. Consider choosing {!r}"
+                                 .format(tags[-1]["name"]))
+            else:
+                raise ValueError("No tags to match against.")
 
         return matched_tag["name"]
 
@@ -116,13 +121,13 @@ class Package:
                            f"Either make a inflator.toml file, or check your input directory")
                 raise e
 
-            data = tomllib.loads(raw_toml)
+            toml_data = tomllib.loads(raw_toml)
 
             # These are required fields!
             if self.username is None:
                 self.username = "LOCAL"
-            self.reponame = data["name"]
-            self.version = data["version"]
+            self.reponame = toml_data["name"]
+            self.version = toml_data["version"]
             print(f"\tLoaded {self.reponame!r} version={self.version!r}")
             print(f"\tInstalling into {self.file_location}")
 
@@ -153,8 +158,8 @@ class Package:
 
                 return resp.content
 
-            data = fetch_data()
-            with ZipFile(io.BytesIO(data)) as archive:
+            zip_data = fetch_data()
+            with ZipFile(io.BytesIO(zip_data)) as archive:
                 archive.extractall(self.file_location)
 
         match self.type:
