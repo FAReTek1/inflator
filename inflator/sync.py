@@ -1,41 +1,61 @@
-import pprint
-import tomllib
 import os
-from typing import Any
 
 from inflator.install import search_for_package, Package, get_toml_data, install
-from inflator import gstoml
-from inflator.util import APPDATA_FARETEK_INFLATE
+from inflator.util import APPDATA_FARETEK_PKGS
 
 
-def locate_package(name, data: str | dict[str, Any]):
-    raw = data.get()
+def sync(fp: str, *, _toplevel=True):
+    print("Collecting packages...")
 
-    split = raw.split('/')
+    def collect(_fp: str, *, _toplevel=False):
+        print(f"\t- Synchronizing libraries in {_fp!r}")
 
-    if len(split) < 3:
-        split += [None] * (3 - len(split))
-    elif len(split) > 3:
-        split = split[:3]
+        data, deps, _ = get_toml_data(_fp, msg=False)
 
-    split = [i if i else None for i in split]
+        # pprint.pp(data)
+        # pprint.pp(deps)
 
-    username, reponame, version = split
-    return search_for_package(reponame, version, username, msg=False)
+        ret = []
+        for name, data in deps.items():
+            print(f"\t\t- Packaging {name!r}")
 
+            # locate that package!
+            if "path" in data:
+                path: str = data["path"]
+                path: list[str] = path.split('/')
+                args = [i if i else None for i in path]
+                location = search_for_package(*args, msg=False)
 
-def sync(fp: str):
-    print(f"- Synchronizing libraries in {fp!r}")
-    data, deps, _ = get_toml_data(fp)
+                if not location:
+                    raise ValueError(f"Could not find package {args}")
+            else:
+                location = search_for_package(reponames=name, msg=False)
+                if not location:
+                    raise ValueError(f"Could not find package {name!r}")
 
-    # pprint.pp(data)
-    # pprint.pp(deps)
+            location = location[0]
 
-    for name, data in deps.items():
-        print(f"\t- Packaging {name!r}: {data=}")
+            pk_fp = os.path.join(APPDATA_FARETEK_PKGS, location)
+            print(f"\t\t\tFound package: {location}")
+            ret.append((name, pk_fp))
 
-        # locate that package!
-        location = locate_package(name, data)[0]
-        print(f"\t\tFound package: {location}")
+            _, dirs, _ = next(os.walk(pk_fp))
+            pk_fp = os.path.join(pk_fp, dirs[0])
 
-        sync(f"{APPDATA_FARETEK_INFLATE}\\{location}")
+            ret += collect(pk_fp)
+        return ret
+
+    collection = collect(fp, _toplevel=True)
+
+    print("Collected pkgs: \n- {}"
+          .format('\n- '.join(map(lambda i: i[1], collection))))
+
+    for name, pk_dir in collection:
+        if os.path.exists(os.path.join(fp, "inflator.toml")):
+            target = os.path.join(fp, "inflation")
+        else:
+            target = os.path.join(fp, "backpack")
+        target = os.path.join(target, name)
+
+        print(f"\t- Creating symlink for {pk_dir!r} into {target!r}")
+        # os.symlink(path, target, True)

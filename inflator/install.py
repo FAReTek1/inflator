@@ -185,13 +185,13 @@ class Package:
         print(f"\t{deps=}")
 
         for _, attrs in deps.items():
-            install(attrs["raw"], attrs["version"], ids=ids)
+            install(attrs["raw"], attrs.get("version"), ids=ids)
 
 
-def search_for_package(reponames: Optional[list[str] | str] = None,
+def search_for_package(usernames: Optional[list[str] | str] = None,
+                       reponames: Optional[list[str] | str] = None,
                        versions: Optional[list[str] | str] = None,
-                       usernames: Optional[list[str] | str] = None,
-                       *, msg: bool=True) -> list[str]:
+                       *, msg: bool = True) -> list[str]:
     """
     Find all repos that fit the query
     :return: list[str] - list of string in format {username}\\{reponame}\\{version}
@@ -228,19 +228,21 @@ def search_for_package(reponames: Optional[list[str] | str] = None,
     return results
 
 
-def get_toml_data(root_dir):
+def get_toml_data(root_dir, msg: bool = True):
     data = {"dependencies": None}  # Prevent errors when trying to delete "dependencies" if it doesn't exist
     deps = {}
     backpack_only = None
     if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
-        print(f"\tReading {fp}")
+        if msg:
+            print(f"\tReading {fp}")
         gs_data, gs_deps = gstoml.parse_gstoml(tomllib.load(open(fp, "rb")))
         data |= gs_data
         deps |= gs_deps
         backpack_only = True
 
     if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
-        print(f"\tReading {fp}")
+        if msg:
+            print(f"\tReading {fp}")
         if_data, if_deps = gstoml.parse_iftoml(tomllib.load(open(fp, "rb")))
         data |= if_data
         deps |= if_deps

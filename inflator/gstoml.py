@@ -27,9 +27,14 @@ def parse_gstoml(toml: dict) -> toml_return:
 def parse_iftoml(toml: dict) -> toml_return:
     # print(f"\t{toml=}")
     deps = {}
-    for name, value in toml.get("dependencies", {}).items():
-        if isinstance(value, str):
-            value = {"raw": value, "version": "*"}
-        deps[name] = value
+    tdeps = toml.get("dependencies", {})
+    if isinstance(tdeps, list):
+        for name in tdeps:
+            deps[name] = None
+    else:
+        for name, value in tdeps.items():
+            if isinstance(value, str):
+                value = {"raw": value, "version": "*"}
+            deps[name] = value
 
     return toml, deps

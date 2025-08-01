@@ -59,7 +59,7 @@ def main():
                 install(args.parg, args.install_version, upgrade=args.install_upgrade)
 
         case "find":
-            print('', *search_for_package(args.name, args.find_version, args.find_username), sep='\n')
+            print('', *search_for_package(args.find_username, args.name, args.find_version), sep='\n')
 
         case _:
             if args.V:
