@@ -6,10 +6,16 @@ work in progress
 
 ### usage
 
-1. go to your goboscript project (cd)
-2. run `inflate`
-3. if you want to do this without cding, do `inflate -i <dir>`
-
+- to sync packages
+  1. go to your goboscript project (cd)
+  2. run `inflate`
+  3. if you want to do this without cding, do `inflate -i <dir>`
+- to install packages
+  - pip inspired syntax.
+  - `inflate install --gh <github link>@<version, if specified, resolves>`
+  - `inflate install -e .`
+  - `inflate install .`
+  
 ### development installation
 1. clone the github repository
 2. cd to the repo directory
