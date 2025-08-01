@@ -1,8 +1,9 @@
 import setuptools
+from inflator import __version__
 
 setuptools.setup(
     name='inflate',
-    version='0.0.0',
+    version=__version__,
     packages=setuptools.find_packages(),
 
     entry_points={

@@ -4,6 +4,7 @@ import os
 from enum import Enum, auto
 from typing import Final
 
+from inflator import __version__
 from inflator.util import ansi
 
 
@@ -20,11 +21,11 @@ def main():
     subparsers = parser.add_subparsers(dest="command")
 
     parser.add_argument("-i", "--input", action="store")
-    parser.add_argument("-V", action="store_true")
+    parser.add_argument("-V", "--version", action="store_true", dest="V")
 
     install_parser = subparsers.add_parser("install", help="Install a package")
     install_parser.add_argument("parg", nargs="?")
-    install_parser.add_argument("-V", nargs="?", dest="install_version")
+    install_parser.add_argument("-V", "--version", nargs="?", dest="install_version")
 
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
@@ -35,7 +36,10 @@ def main():
             install(args.parg, args.install_version)
 
         case _:
-            print("Synchronizing libraries")
-            print(f"{args.command=} {args.__dict__=}")
+            if args.V:
+                print(f"Inflate {__version__}")
+            else:
+                print("Synchronizing libraries")
+                print(f"{args.command=} {args.__dict__=}")
 
-            # raise Exception(f"Not implemented\n{ERROR_MSG}")
+                print(f"Not implemented\n{ERROR_MSG}")

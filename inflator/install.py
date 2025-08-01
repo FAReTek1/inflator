@@ -1,7 +1,4 @@
-import logging
 import os
-import re
-import pprint
 import io
 import shutil
 import tomllib
@@ -35,7 +32,6 @@ class PackageTypes(Enum):
 class Package:
     raw: str
     type: PackageTypes
-
 
     username: Optional[str] = None
     reponame: Optional[str] = None  # = name
@@ -81,7 +77,6 @@ class Package:
                 matched_tag = tag
                 break
 
-
         assert isinstance(matched_tag, dict)
 
         return matched_tag["name"]
@@ -120,7 +115,7 @@ class Package:
             shutil.copytree(self.raw, os.path.join(self.file_location, self.reponame))
 
         def install_git():
-            # it says git but it means github
+            # it says git but it means GitHub
             print("\tGit Package")
             self._parse_gh_link()
 
