@@ -18,4 +18,4 @@ def parse_gstoml(toml: dict) -> tuple[dict, dict]:
 def parse_iftoml(toml: dict) -> tuple[dict, dict]:
     # print(f"\t{toml=}")
     # probably no parsing necessary here
-    return toml, toml["dependencies"]
+    return toml, toml.get("dependencies", {})

@@ -14,13 +14,13 @@ import httpx
 from furl import furl
 
 from inflator import gstoml
-from inflator.util import APPDATA_FARETEK
+from inflator.util import APPDATA_FARETEK_PKGS
 
 
-def install(raw: str, version: str = None):
+def install(raw: str, version: str = None, *, upgrade: bool = False):
     pkg = Package.parse(raw)
     pkg.version = version
-    pkg.install()
+    pkg.install(upgrade=upgrade)
 
 
 class PackageTypes(Enum):
@@ -36,6 +36,8 @@ class Package:
     username: Optional[str] = None
     reponame: Optional[str] = None  # = name
     version: Optional[str] = None
+
+    backpack_only: Optional[bool] = None
 
     @classmethod
     def parse(cls, raw: str) -> Self:
@@ -83,15 +85,19 @@ class Package:
 
     @property
     def file_location(self):
-        return f"{APPDATA_FARETEK}\\{self.reponame}\\{self.version}\\"
+        return f"{APPDATA_FARETEK_PKGS}\\{self.username}\\{self.reponame}\\{self.version}\\"
 
-    def install(self):
+    def install(self, *, upgrade: bool = False):
+        if not upgrade:
+            # search for package
+            ...
+
         print(f"- Installing {self}")
 
         def install_local():
             print("\tLocal Package")
             print("\tFetching goboscript.toml/inflate.toml")
-            print(f"\tInstalling into {APPDATA_FARETEK}")
+            print(f"\tInstalling into {APPDATA_FARETEK_PKGS}")
 
             # need to read inflator.toml to fetch name and version
             print("\tReading inflator.toml for name/version")
@@ -105,6 +111,8 @@ class Package:
             data = tomllib.loads(raw_toml)
 
             # These are required fields!
+            if self.username is None:
+                self.username = "LOCAL"
             self.reponame = data["name"]
             self.version = data["version"]
             print(f"\tLoaded {self.reponame!r} version={self.version!r}")
@@ -147,30 +155,70 @@ class Package:
             case PackageTypes.GIT:
                 install_git()
 
+        assert self.username
         assert self.reponame
         assert self.version
 
         root, dirs, _ = next(os.walk(self.file_location))
         root_dir = root + dirs[0]
 
-        toml_gs = None
-        toml_if = None
-
         data = {"dependencies": None}  # Prevent errors when trying to delete "dependencies" if it doesn't exist
         deps = {}
         if os.path.exists(fp := f"{root_dir}\\goboscript.toml"):
-            print(f"\tReading {fp!r}")
+            print(f"\tReading {fp}")
             gs_data, gs_deps = gstoml.parse_gstoml(tomllib.load(open(fp, "rb")))
             data |= gs_data
             deps |= gs_deps
+            self.backpack_only = True
 
         if os.path.exists(fp := f"{root_dir}\\inflator.toml"):
-            print(f"\tReading {fp!r}")
+            print(f"\tReading {fp}")
             if_data, if_deps = gstoml.parse_iftoml(tomllib.load(open(fp, "rb")))
             data |= if_data
             deps |= if_deps
+            self.backpack_only = False
 
         del data["dependencies"]  # only use deps
 
         print(f"\t{data=}")
         print(f"\t{deps=}")
+
+        for _, attrs in deps.items():
+            install(attrs["url"], attrs["version"])
+
+
+def search_for_package(reponames: Optional[list[str] | str] = None,
+                       versions: Optional[list[str] | str] = "*",
+                       usernames: Optional[list[str] | str] = None) -> list[str]:
+    """
+    Find all repos that fit the query
+    :return: list[str] - list of string in format {username}\\{reponame}\\{version}
+    """
+    def handle_l(ls):
+        # handle list so that it can work nicely. None -> [], single string -> [str]
+        if isinstance(ls, str):
+            ls = [ls]
+        elif ls is None:
+            ls = []
+
+        return [i.lower() for i in ls]
+
+    reponames = handle_l(reponames)
+    versions = handle_l(versions)
+    usernames = handle_l(usernames)
+
+    print(f"Searching for {reponames!r} {versions} by {usernames!r}")
+    _, local_usernames, _ = next(os.walk(APPDATA_FARETEK_PKGS))
+
+    results: list[str] = []
+
+    for username in filter(lambda u: not usernames or u.lower() in usernames, local_usernames):
+        root, local_reponames, _ = next(os.walk(f"{APPDATA_FARETEK_PKGS}\\{username}"))
+
+        for reponame in filter(lambda r: not reponames or r.lower() in reponames, local_reponames):
+            _, local_versions, _ = next(os.walk(f"{root}\\{reponame}"))
+
+            for version in filter(lambda v: not versions or v.lower() in versions, local_versions):
+                results.append(f"{username}\\{reponame}\\{version}")
+
+    return results

@@ -26,6 +26,13 @@ def main():
     install_parser = subparsers.add_parser("install", help="Install a package")
     install_parser.add_argument("parg", nargs="?")
     install_parser.add_argument("-V", "--version", nargs="?", dest="install_version")
+    install_parser.add_argument("-U", "--upgrade", action="store_true", dest="install_upgrade")
+
+    find_parser = subparsers.add_parser("find", help="locate a package with a name/version/creator. "
+                                                     "Can also be used to list out installed pkgs")
+    find_parser.add_argument("name", nargs="?")  #, dest="find_name")
+    find_parser.add_argument("-V", "--version", nargs="?", dest="find_version")
+    find_parser.add_argument("-U", "--username", nargs="?", dest="find_username")
 
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
@@ -33,7 +40,11 @@ def main():
     match args.command:
         case "install":
             from inflator.install import install
-            install(args.parg, args.install_version)
+            install(args.parg, args.install_version, upgrade=args.install_upgrade)
+
+        case "find":
+            from inflator.install import search_for_package
+            print('', *search_for_package(args.name, args.find_version, args.find_username), sep='\n')
 
         case _:
             if args.V:
