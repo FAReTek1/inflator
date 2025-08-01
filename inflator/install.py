@@ -184,7 +184,7 @@ class Package:
         print(f"\t{deps=}")
 
         for _, attrs in deps.items():
-            install(attrs["url"], attrs["version"])
+            install(attrs["raw"], attrs["version"])
 
 
 def search_for_package(reponames: Optional[list[str] | str] = None,
