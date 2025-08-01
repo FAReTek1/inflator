@@ -2,7 +2,9 @@
 
 this is an alternative to backpack
 
-work in progress
+THIS IS **work in progress**
+
+MOST LIKELY, THE ENTIRE PROJECT IS GOING TO BE REVAMPED TO ALLOW FOR BETTER ORGANISATION
 
 ### usage
 
