@@ -5,6 +5,12 @@ setuptools.setup(
     version='0.0.0',
     packages=setuptools.find_packages(),
 
+    entry_points={
+        'console_scripts': [
+            'inflate=inflator.__main__:main'
+        ]
+    },
+
     author="faretek1",
     description="temp",
     long_description_content_type="text/markdown",
