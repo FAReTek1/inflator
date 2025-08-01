@@ -12,7 +12,8 @@ class Modes(Enum):
     SYNC = auto()
 
 
-ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}"
+GITHUB_REPO: Final[str] = "no github link rn"
+ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"
 
 
 def main():
@@ -47,5 +48,6 @@ def main():
 
         case Modes.SYNC:
             print("Synchronizing libraries")
+            raise Exception(f"Not implemented\n{ERROR_MSG}")
         case _:
             print(f"Uh, how did we get here?\n{mode=}, {args.__dict__=}\n{ERROR_MSG}")
