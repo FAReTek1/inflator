@@ -125,9 +125,9 @@ class Package:
 
             # These are required fields!
             if self.username is None:
-                self.username = "LOCAL"
-            self.reponame = toml_data["name"]
-            self.version = toml_data["version"]
+                self.username = toml_data.get("username", "LOCAL")
+            self.reponame = toml_data["name"]  # please add a name=... value in inflator.toml
+            self.version = toml_data["version"]  # please add a version=... value in inflator.toml
             print(f"\tLoaded {self.reponame!r} version={self.version!r}")
             print(f"\tInstalling into {self.file_location}")
 
