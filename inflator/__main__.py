@@ -29,15 +29,10 @@ def main():
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
 
-    print(args.__dict__)
-
     match args.command:
         case "install":
-            ...
-            # raw = args.parg
-
-            # from inflator.install import install
-            # install(raw)
+            from inflator.install import install
+            install(args.parg, args.install_version)
 
         case _:
             print("Synchronizing libraries")

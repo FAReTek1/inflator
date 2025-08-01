@@ -6,6 +6,7 @@ work in progress
 
 ### usage
 
+use `inflator.toml`
 - to sync packages
   1. go to your goboscript project (cd)
   2. run `inflate`
