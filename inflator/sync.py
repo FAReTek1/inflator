@@ -3,6 +3,7 @@ from __future__ import annotations
 import logging
 import pathlib
 import shutil
+import os
 
 from inflator import package
 
@@ -29,8 +30,8 @@ def sync(path: pathlib.Path):
         print("Nothing to sync, so nothing to do")
         return
 
-    (path / "backpack").mkdir()
-    (path / "inflator").mkdir()
+    (path / "backpack").mkdir(exist_ok=True)
+    (path / "inflator").mkdir(exist_ok=True)
 
     shutil.rmtree(path / "backpack", ignore_errors=True)
     shutil.rmtree(path / "inflator", ignore_errors=True)
@@ -42,5 +43,6 @@ def sync(path: pathlib.Path):
 
         assert dep.install_path.exists()  # You haven't installed the dependency, or you may have spelt something wrong.
 
+        os.makedirs(pathlib.Path(*sympath.parts[:-1]), exist_ok=True)
         sympath.unlink(missing_ok=True)
         sympath.symlink_to(dep.install_path, target_is_directory=True)
