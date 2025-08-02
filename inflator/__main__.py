@@ -70,7 +70,7 @@ def main():
                 install(args.parg, args.install_version, upgrade=args.install_upgrade)
 
         case "find":
-            print('', *search_for_package(args.find_username, args.name, args.find_version), sep='\n')
+            pprint.pp(search_for_package(args.find_username, args.name, args.find_version))
 
         case "parse":
             with open(args.name, "rb") as f:

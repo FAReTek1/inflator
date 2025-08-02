@@ -31,6 +31,7 @@ class Package:
     local_path: Optional[pathlib.Path] = None
     importname: Optional[str] = None
     is_local: Optional[bool] = None
+    backpack_only: Optional[bool] = None
 
     _resolved_version: Optional[str] = None
     deps: list[Package] = field(default_factory=list)
@@ -42,7 +43,7 @@ class Package:
         return hashlib.md5(idstr.encode()).hexdigest()
 
     @classmethod
-    def from_raw(cls, raw: str, *, importname: Optional[str] = None, version: str = '*',
+    def from_raw(cls, raw: str, *, importname: Optional[str] = None, username: Optional[str] = None, reponame: Optional[str] = None, version: str = '*',
                  _id: Optional[str] = None) -> Self:
         f = furl(raw)
 
@@ -75,6 +76,10 @@ class Package:
 
         if self.id == _id and _id is not None:
             raise ValueError(f"Circular import of {self}")
+        if username is not None:
+            self.username = username
+        if reponame is not None:
+            self.reponame = reponame
 
         if self.is_local:
             self.resolve_toml_info()
@@ -99,6 +104,7 @@ class Package:
         assert self.local_path
 
         _id = self.id
+        self.backpack_only = not self.toml_path("inflator").exists() and self.toml_path("goboscript").exists()
 
         if self.toml_path("inflator").exists():
             logging.info("Reading inflator.toml for name/version")
@@ -170,7 +176,7 @@ class Package:
 
         return resp.content
 
-    def install(self, ids: Optional[list[str]] = None):
+    def install(self, ids: Optional[list[str]] = None, update: bool = False):
         if ids is None:
             ids = [self.id]
         elif self.id in ids:
@@ -178,6 +184,10 @@ class Package:
             raise RecursionError(f"Circular import of {self}")
 
         if self.is_local:
+            print(search_for_package(
+                self.username, self.reponame, self.version
+            ))
+
             logging.info(f"Installing local package {self}")
             logging.info(f"Installing into {self.install_path}")
 
@@ -236,4 +246,20 @@ def search_for_package(usernames: Optional[list[str] | str] = None,
     versions = handle_l(versions)
     usernames = handle_l(usernames)
 
-    raise NotImplementedError
+    logging.info(f"Searching for {reponames!r} {versions} by {usernames!r}")
+    _, local_usernames, _ = next(APPDATA_FARETEK_PKGS.walk())
+
+    results = []
+
+    for username in filter(lambda u: not usernames or u.lower() in usernames, local_usernames):
+        path1 = APPDATA_FARETEK_PKGS / username
+        _, local_reponames, _ = next(path1.walk())
+
+        for reponame in filter(lambda r: not reponames or r.lower() in reponames, local_reponames):
+            path2 = path1 / reponame
+            _, local_versions, _ = next(path2.walk())
+
+            for version in filter(lambda v: not versions or v.lower() in versions, local_versions):
+                install_path = path2 / version
+                results.append(Package.from_raw(install_path, username=username, reponame=reponame, version=version))
+    return results
