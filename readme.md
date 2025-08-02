@@ -92,7 +92,8 @@ source)
 </details>
 
 To sync packages:
-> [!NOTE] If you are on windows, you will need permissions to create symlinks
+> [!NOTE]
+> If you are on windows, you will need permissions to create symlinks
 
 1. cd to your goboscript project
 2. run `inflate`
