@@ -134,3 +134,7 @@ Prints out the path to the log folder
 2. cd to the repo directory
 3. do `pip install -e .`
 4. you can use inflate using `inflate <args>`
+
+## credits
+
+banner image is partially from https://scratch.mit.edu/projects/317901726/remixtree/
