@@ -60,7 +60,7 @@ class Package:
             local_path = None
             is_local = False
         else:
-            local_path = pathlib.Path(raw)
+            local_path = pathlib.Path(raw).resolve()
 
             _username = None
             _reponame = local_path.parts[-1]
