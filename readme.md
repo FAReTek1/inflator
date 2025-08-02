@@ -28,7 +28,7 @@ The command for installing packages is  `inflate install`
   - Ensure an `inflator.toml` file is provided (see below)
   - cd to inside your package, to the same level as `inflator.toml`
   - run `inflate install .`
-- For installing github packages
+- For installing GitHub packages
   - run `inflate install <link to github repository>`
   - Optionally supply a version (tag name):<br>
     `inflate install <link to github repository> -V <version>`
@@ -62,7 +62,7 @@ quat = "quat"
 # Use a GitHub repository
 geo2d = "https://github.com/FAReTek1/geo2d"
 
-# Use a GitHub repository with a version
+# Use a GitHub repository with a version.
 # Version numbers also work with globbing
 geo2d_v7 = ["https://github.com/FAReTek1/geo2d", "v*.*.7"]
 
