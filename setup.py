@@ -2,23 +2,23 @@ import setuptools
 from inflator import __version__
 
 setuptools.setup(
-    name='inflate',
+    name="inflate",
     version=__version__,
     packages=setuptools.find_packages(),
 
     entry_points={
-        'console_scripts': [
-            'inflate=inflator.__main__:main'
+        "console_scripts": [
+            "inflate=inflator.__main__:main"
         ]
     },
 
     author="faretek1",
-    description="temp",
+    description="Inflates gobos. A goboscript package manager.",
     long_description_content_type="text/markdown",
     long_description=open("readme.md").read(),
     install_requires=open("requirements.txt").read(),
-    keywords=['goboscript'],
+    keywords=["goboscript"],
     project_urls={
-        "Source": "https://github.com/faretek1/inflate",
+        "Source": "https://github.com/FAReTek1/inflator",
     }
 )
