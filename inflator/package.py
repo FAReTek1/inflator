@@ -18,7 +18,7 @@ import httpx
 
 from furl import furl
 
-from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA, APPDATA_FARETEK, APPDATA_FARETEK_INFLATE
+from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA, rmtree
 from inflator.parse import parse_iftoml, parse_gstoml
 
 
@@ -219,13 +219,13 @@ class Package:
             if self.install_path.is_symlink():
                 self.install_path.unlink()
             else:
-                shutil.rmtree(self.install_path, ignore_errors=True)
+                rmtree(self.install_path, ignore_errors=True)
 
             if editable:
                 os.makedirs(pathlib.Path(*self.install_path.parts[:-1]), exist_ok=True)
                 self.install_path.symlink_to(self.local_path)
             else:
-                shutil.copytree(self.local_path, self.install_path)
+                shutil.copytree(self.local_path, self.install_path, symlinks=True)
 
         else:
             logging.info(f"Installing gh package {self}")
@@ -248,9 +248,9 @@ class Package:
             extraction_path = self.zip_path / dirs[0]
             logging.info(f"Moving {extraction_path} to {self.install_path}")
 
-            shutil.rmtree(self.install_path, ignore_errors=True)
+            rmtree(self.install_path, ignore_errors=True)
             shutil.move(extraction_path, self.install_path)
-            shutil.rmtree(self.zip_path, ignore_errors=True)
+            rmtree(self.zip_path, ignore_errors=True)
 
             self.local_path = self.install_path
             self.resolve_toml_info()
