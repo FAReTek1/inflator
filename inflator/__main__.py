@@ -1,21 +1,29 @@
+from __future__ import annotations
+
 import argparse
 import os
+import pprint
+import time
 import tomllib
+import logging
 
 from typing import Final
+from datetime import datetime
 
 from inflator import __version__
 from inflator.install import install
-from inflator.gstoml import parse_gstoml, parse_iftoml
+from inflator.parse import parse_gstoml, parse_iftoml
 from inflator.util import ansi
-from inflator.install import search_for_package
+from inflator.package import search_for_package
 from inflator.sync import sync
-
-GITHUB_REPO: Final[str] = "no github link rn"
-ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"
+from inflator.util import ERROR_MSG
 
 
 def main():
+    logging.basicConfig(filename=f"logs/{time.time()}.log", level=logging.INFO)
+
+    logging.info(f"init: {datetime.now()}")
+
     parser = argparse.ArgumentParser(
         prog="inflate",
         description="Manage libraries for use in goboscript",
@@ -39,6 +47,9 @@ def main():
     find_parser.add_argument("-V", "--version", nargs="?", dest="find_version")
     find_parser.add_argument("-U", "--username", nargs="?", dest="find_username")
 
+    parse_parser = subparsers.add_parser("parse", help="Parse gstoml or iftoml file")
+    parse_parser.add_argument("name", nargs="?")  # , dest="find_name")
+
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
 
@@ -47,19 +58,27 @@ def main():
             if args.install_requirements:
                 with open(args.install_requirements, "rb") as f:
                     if f.name.endswith("goboscript.toml"):
-                        _, deps = parse_gstoml(tomllib.load(f))
+                        deps = parse_gstoml(tomllib.load(f)).deps
                     elif f.name.endswith("inflator.toml"):
-                        _, deps = parse_iftoml(tomllib.load(f))
+                        deps = parse_iftoml(tomllib.load(f)).deps
                     else:
                         raise ValueError(f"File {f.name!r} is not goboscript.toml or inflator.toml\n{ERROR_MSG}")
 
-                for dep, raw in deps.items():
-                    install(raw["raw"], raw["version"])
+                for dep in deps:
+                    dep.install()
             else:
                 install(args.parg, args.install_version, upgrade=args.install_upgrade)
 
         case "find":
             print('', *search_for_package(args.find_username, args.name, args.find_version), sep='\n')
+
+        case "parse":
+            with open(args.name, "rb") as f:
+                if f.name.endswith("goboscript.toml"):
+                    data = parse_gstoml(tomllib.load(f))
+                else:
+                    data = parse_iftoml(tomllib.load(f))
+                pprint.pp(data)
 
         case _:
             if args.V:
@@ -70,4 +89,3 @@ def main():
                     cwd = args.input
 
                 sync(cwd)
-

@@ -25,3 +25,14 @@ use `inflator.toml`
 2. cd to the repo directory
 3. do `pip install -e .`
 4. you can use inflate using `inflate <args>`
+
+### inflator.toml
+
+```toml
+[dependencies]
+pk1 = "path"
+pk2 = ["path", "version"]
+```
+where path can be:
+- a location on ur pc
+- a github url
