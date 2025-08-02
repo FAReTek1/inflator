@@ -43,7 +43,8 @@ class Package:
         return hashlib.md5(idstr.encode()).hexdigest()
 
     @classmethod
-    def from_raw(cls, raw: str, *, importname: Optional[str] = None, username: Optional[str] = None, reponame: Optional[str] = None, version: str = '*',
+    def from_raw(cls, raw: str, *, importname: Optional[str] = None, username: Optional[str] = None,
+                 reponame: Optional[str] = None, version: str = '*',
                  _id: Optional[str] = None) -> Self:
         f = furl(raw)
 
@@ -55,18 +56,18 @@ class Package:
                 segments = segments[:-1]
 
             assert len(segments) == 2
-            username, reponame = segments
+            _username, _reponame = segments
             local_path = None
             is_local = False
         else:
             local_path = pathlib.Path(raw)
 
-            username = None
-            reponame = local_path.parts[-1]
+            _username = None
+            _reponame = local_path.parts[-1]
             is_local = True
         self = cls(
-            username=username,
-            reponame=reponame,
+            username=_username,
+            reponame=_reponame,
             version=version,
             importname=importname,
             local_path=local_path,
@@ -87,11 +88,16 @@ class Package:
         return self
 
     @property
+    def name(self):
+        return f"{self.reponame} {self.version} by {self.username}"
+
+    @property
     def install_path(self):
-        return APPDATA_FARETEK_PKGS / self.username / self.reponame / self.version
+        return APPDATA_FARETEK_PKGS / str(self.username) / self.reponame / self.version
 
     @property
     def zip_path(self):
+        assert self.username is not None  # You can't have a GitHub package without a username
         return APPDATA_FARETEK_ZIPAREA / self.username / self.reponame / self.version
 
     def toml_path(self, name):
@@ -104,7 +110,13 @@ class Package:
         assert self.local_path
 
         _id = self.id
-        self.backpack_only = not self.toml_path("inflator").exists() and self.toml_path("goboscript").exists()
+        self.backpack_only = (not self.toml_path("inflator").exists()) and self.toml_path("goboscript").exists()
+
+        logging.info("For self={}, iftoml_exists={}, gstoml_exists={}"
+                     .format(self,
+                             self.toml_path("inflator").exists(),
+                             self.toml_path("goboscript").exists()))
+        logging.info(f"So {self.backpack_only=}")
 
         if self.toml_path("inflator").exists():
             logging.info("Reading inflator.toml for name/version")
@@ -184,9 +196,9 @@ class Package:
             raise RecursionError(f"Circular import of {self}")
 
         if self.is_local:
-            print(search_for_package(
-                self.username, self.reponame, self.version
-            ))
+            # print(search_for_package(
+            #     self.username, self.reponame, self.version
+            # ))
 
             logging.info(f"Installing local package {self}")
             logging.info(f"Installing into {self.install_path}")
@@ -222,14 +234,40 @@ class Package:
         for dep in self.deps:
             dep.install(ids)
 
-        print(f"Installed {self.reponame} {self.version} by {self.username} into {self.install_path}")
+        print(f"Installed {self.name} into {self.install_path}")
+
+    def resolve(self) -> Self:
+        pkgs = search_for_package(self.username, self.reponame, self.version)
+        if len(pkgs) > 1:
+            logging.info(f"Multiple packages resolved for {self}\n\t{pkgs}")
+        elif len(pkgs) == 0:
+            logging.warning(f"Could not resolve {self}")
+            return self
+
+        pkg = pkgs[0]
+        self.username = pkg.username
+        self.reponame = pkg.reponame
+        self.version = pkg.version
+        self.backpack_only = pkg.backpack_only
+
+        if not self.local_path:
+            self.local_path = pkg.local_path
+
+        logging.info(f"Resolved {self=}")
+
+        return self
+
+    @property
+    def symlink_folder(self):
+        return "backpack" if self.backpack_only else "inflator"
 
 
 def search_for_package(usernames: Optional[list[str] | str] = None,
                        reponames: Optional[list[str] | str] = None,
-                       versions: Optional[list[str] | str] = None):
+                       versions: Optional[list[str] | str] = None,
+                       globbed: bool = True):
     """
-    Find all repos that fit the query
+    Find all repos that fit the query. Uses globs unless specified otherwise
     :return: list[str] - list of string in format {username}\\{reponame}\\{version}
     """
 
@@ -240,26 +278,40 @@ def search_for_package(usernames: Optional[list[str] | str] = None,
         elif ls is None:
             ls = []
 
-        return [i.lower() for i in ls]
+        return ls
 
-    reponames = handle_l(reponames)
+    reponames = [r.lower() for r in handle_l(reponames)]
     versions = handle_l(versions)
-    usernames = handle_l(usernames)
+    usernames = [u.lower() for u in handle_l(usernames)]
 
     logging.info(f"Searching for {reponames!r} {versions} by {usernames!r}")
     _, local_usernames, _ = next(APPDATA_FARETEK_PKGS.walk())
 
     results = []
 
-    for username in filter(lambda u: not usernames or u.lower() in usernames, local_usernames):
+    def match_l(pats, value):
+        if globbed:
+            return not pats or any(fnmatch.fnmatch(value, p) for p in pats)
+        else:
+            return not pats or value in pats
+
+    for username in filter(lambda i: match_l(usernames, i.lower()), local_usernames):
+        logging.info(f"\tSearching for {username=}")
         path1 = APPDATA_FARETEK_PKGS / username
         _, local_reponames, _ = next(path1.walk())
 
-        for reponame in filter(lambda r: not reponames or r.lower() in reponames, local_reponames):
+        for reponame in filter(lambda i: match_l(reponames, i.lower()), local_reponames):
+            logging.info(f"\tSearching for {reponame=}")
+
             path2 = path1 / reponame
             _, local_versions, _ = next(path2.walk())
 
-            for version in filter(lambda v: not versions or v.lower() in versions, local_versions):
+            for version in filter(lambda i: match_l(versions, i.lower()), local_versions):
+                logging.info(f"\tSearching for {version=}")
+
                 install_path = path2 / version
-                results.append(Package.from_raw(install_path, username=username, reponame=reponame, version=version))
+                pkg = Package.from_raw(install_path, username=username, reponame=reponame, version=version)
+                results.append(pkg)
+
+                logging.info(f"\tGot {pkg}")
     return results

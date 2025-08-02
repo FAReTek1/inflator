@@ -47,14 +47,21 @@ def parse_iftoml(toml: dict, _id: Optional[str] = None):
     for name, value in tdeps.items():
         if isinstance(value, str):
             raw, version = value, "*"
+            username = None
+
         else:
             assert isinstance(value, list)
-            assert len(value) == 2
 
-            raw, version = value
+            if len(value) == 2:
+                raw, version = value
+                username = None
+            elif len(value) == 3:
+                raw, version, username = value
+            else:
+                raise ValueError(f"Unexpected {value=}")
 
         deps.append(
-            package.Package.from_raw(raw, version=version, importname=name, _id=_id)
+            package.Package.from_raw(raw, version=version, importname=name, _id=_id, username=username)
         )
 
     return IFToml(

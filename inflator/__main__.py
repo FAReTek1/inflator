@@ -1,54 +1,61 @@
 from __future__ import annotations
 
 import argparse
-import os
+import pathlib
 import pprint
 import time
 import tomllib
 import logging
 
-from typing import Final
 from datetime import datetime
 
 from inflator import __version__
 from inflator.install import install
 from inflator.parse import parse_gstoml, parse_iftoml
-from inflator.util import ansi
 from inflator.package import search_for_package
 from inflator.sync import sync
 from inflator.util import ERROR_MSG
 
 
 def main():
-    logging.basicConfig(filename=f"logs/{time.time()}.log", level=logging.INFO)
+    __file_dir__ = pathlib.Path(*pathlib.Path(__file__).parts[:-2])
+    log_folder = __file_dir__ / "logs"
+
+    logging.basicConfig(filename=log_folder / f"{time.time()}.log", level=logging.INFO)
 
     logging.info(f"init: {datetime.now()}")
 
     parser = argparse.ArgumentParser(
         prog="inflate",
-        description="Manage libraries for use in goboscript",
-        epilog=f':)'
+        description="Manage libraries for use in goboscript.",
+        epilog="When called with no args: Sync libraries in the current directory."
     )
     subparsers = parser.add_subparsers(dest="command")
 
-    parser.add_argument("-i", "--input", action="store")
-    parser.add_argument("-V", "--version", action="store_true", dest="V")
+    parser.add_argument("-i", "--input", action="store", help="Set input directory for syncing. Default is cwd")
+    parser.add_argument("-V", "--version", action="store_true", dest="V", help="Get inflator version number")
+    parser.add_argument("-L", "--log-folder", action="store_true", dest="L", help="Get log folder")
 
     install_parser = subparsers.add_parser("install", help="Install a package")
-    install_parser.add_argument("parg", nargs="?")
-    install_parser.add_argument("-V", "--version", nargs="?", dest="install_version")
-    install_parser.add_argument("-U", "--upgrade", action="store_true", dest="install_upgrade")
+    install_parser.add_argument("parg", nargs="?", help="Package to install")
+    install_parser.add_argument("-V", "--version", nargs="?", dest="install_version",
+                                help="Version of package to install. Defaults to newest version")
+    install_parser.add_argument("-U", "--upgrade", action="store_true", dest="install_upgrade",
+                                help="Whether to upgrade the package. Default is false. NOT IMPLEMENTED!")
     install_parser.add_argument("-r", "--requirements", nargs="?", dest="install_requirements",
                                 help="Path to inflator.toml/goboscript.toml file")
 
-    find_parser = subparsers.add_parser("find", help="locate a package with a name/version/creator. "
-                                                     "Can also be used to list out installed pkgs")
-    find_parser.add_argument("name", nargs="?")  # , dest="find_name")
-    find_parser.add_argument("-V", "--version", nargs="?", dest="find_version")
-    find_parser.add_argument("-U", "--username", nargs="?", dest="find_username")
+    find_parser = subparsers.add_parser("find", help="Locate a package with a name/version/creator. "
+                                                     "Can also be used to list out installed pkgs. "
+                                                     "It is globbed.")
+    find_parser.add_argument("name", nargs="?", help="Name of package/repository")  # , dest="find_name")
+    find_parser.add_argument("-V", "--version", nargs="?", dest="find_version",
+                             help="Version of package")
+    find_parser.add_argument("-U", "--username", nargs="?", dest="find_username",
+                             help="Username of creator of package")
 
     parse_parser = subparsers.add_parser("parse", help="Parse gstoml or iftoml file")
-    parse_parser.add_argument("name", nargs="?")  # , dest="find_name")
+    parse_parser.add_argument("name", nargs="?", help="Path to goboscript.toml or inflator.toml")  # , dest="find_name")
 
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
@@ -70,7 +77,9 @@ def main():
                 install(args.parg, args.install_version, upgrade=args.install_upgrade)
 
         case "find":
-            pprint.pp(search_for_package(args.find_username, args.name, args.find_version))
+            pks = search_for_package(args.find_username, args.name, args.find_version)
+            for pk in pks:
+                print(pk.name)
 
         case "parse":
             with open(args.name, "rb") as f:
@@ -83,9 +92,13 @@ def main():
         case _:
             if args.V:
                 print(f"Inflate {__version__}")
+            elif args.L:
+                print(f"{log_folder=}")
             else:
-                cwd = os.getcwd()
+
                 if args.input:
-                    cwd = args.input
+                    cwd = pathlib.Path(args.input)
+                else:
+                    cwd = pathlib.Path.cwd()
 
                 sync(cwd)
