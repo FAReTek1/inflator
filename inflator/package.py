@@ -5,16 +5,19 @@ import logging
 import pathlib
 import hashlib
 import pprint
+import shutil
 import tomllib
 
 from dataclasses import dataclass, field
 from typing import Optional, Self, Any
+from zipfile import ZipFile
+from io import BytesIO
 
 import httpx
 
 from furl import furl
 
-from inflator.util import APPDATA_FARETEK_PKGS
+from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA
 from inflator.parse import parse_iftoml, parse_gstoml
 
 
@@ -77,6 +80,10 @@ class Package:
     @property
     def install_path(self):
         return APPDATA_FARETEK_PKGS / self.username / self.reponame / self.version
+
+    @property
+    def zip_path(self):
+        return APPDATA_FARETEK_ZIPAREA / self.username / self.reponame / self.version
 
     def toml_path(self, name):
         return self.local_path / f"{name}.toml"
@@ -147,6 +154,8 @@ class Package:
             e.add_note(f"Tag seems to be invalid. Maybe you meant {self.fetch_tag()!r}?")
             raise e
 
+        logging.info(f"Downloaded {resp.content.__sizeof__()} bytes with status code {resp.status_code}")
+
         return resp.content
 
     def install(self, ids: Optional[list[str]] = None):
@@ -155,10 +164,11 @@ class Package:
 
         if self.is_local:
             logging.info(f"Installing local package {self}")
-            logging.info(f"Installing into {APPDATA_FARETEK_PKGS}")
+            logging.info(f"Installing into {self.install_path}")
 
-            print(self)
-            print(self.install_path)
+            shutil.rmtree(self.install_path, ignore_errors=True)
+            shutil.copytree(self.local_path, self.install_path)
+            print(f"Installed {self.reponame} {self.version} by {self.username} into {self.install_path}")
 
         else:
             logging.info(f"Installing gh package {self}")
@@ -166,6 +176,21 @@ class Package:
             if not self.version:
                 self.version = "*"
             self.version = self.fetch_tag(self.version)
+
+            zipball = self.fetch_data()
+
+            shutil.rmtree(self.zip_path, ignore_errors=True)
+            with ZipFile(BytesIO(zipball)) as archive:
+                archive.extractall(self.zip_path)
+
+            _, dirs, _ = next(self.zip_path.walk())
+            extraction_path = self.zip_path / dirs[0]
+            logging.info(f"Moving {extraction_path} to {self.install_path}")
+
+            shutil.rmtree(self.install_path, ignore_errors=True)
+            shutil.move(extraction_path, self.install_path)
+            shutil.rmtree(self.zip_path, ignore_errors=True)
+
 
 
 def search_for_package(usernames: Optional[list[str] | str] = None,
