@@ -19,7 +19,9 @@ from inflator.util import ERROR_MSG
 
 def main():
     __file_dir__ = pathlib.Path(*pathlib.Path(__file__).parts[:-2])
-    log_folder = __file_dir__ / "logs"
+    log_folder = __file_dir__ / "inflator-logs"
+
+    log_folder.mkdir(exist_ok=True)
 
     logging.basicConfig(filename=log_folder / f"{time.time()}.log", level=logging.INFO)
 
