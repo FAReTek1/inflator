@@ -42,7 +42,8 @@ class Package:
         return hashlib.md5(idstr.encode()).hexdigest()
 
     @classmethod
-    def from_raw(cls, raw: str, *, importname: Optional[str] = None, version: str = '*') -> Self:
+    def from_raw(cls, raw: str, *, importname: Optional[str] = None, version: str = '*',
+                 _id: Optional[str] = None) -> Self:
         f = furl(raw)
 
         if f.host:
@@ -72,6 +73,9 @@ class Package:
             is_local=is_local,
         )
 
+        if self.id == _id and _id is not None:
+            raise ValueError(f"Circular import of {self}")
+
         if self.is_local:
             self.resolve_toml_info()
 
@@ -91,13 +95,15 @@ class Package:
     def toml_file(self, name):
         return open(self.toml_path(name), "rb")
 
-    def resolve_toml_info(self):
+    def resolve_toml_info(self, _id: Optional[str] = None):
         assert self.local_path
+
+        _id = self.id
 
         if self.toml_path("inflator").exists():
             logging.info("Reading inflator.toml for name/version")
 
-            data = parse_iftoml(tomllib.load(self.toml_file("inflator")))
+            data = parse_iftoml(tomllib.load(self.toml_file("inflator")), _id)
 
             if data.username:
                 self.username = data.username
@@ -111,12 +117,18 @@ class Package:
                 self.version = data.version
                 logging.info(f"{self.version=}")
 
+            self.deps += data.deps
+
         if self.toml_path("goboscript").exists():
             logging.info("Reading goboscript.toml for info")
 
-            data = parse_iftoml(tomllib.load(self.toml_file("goboscript")))
+            data = parse_gstoml(tomllib.load(self.toml_file("goboscript")), _id)
 
             logging.info(f"goboscript toml_data: {data}")
+
+            self.deps += data.deps
+
+        logging.info(f"Resolved {self.deps=}")
 
     def fetch_tag(self, pattern="*"):
         logging.info(f"Looking for tag for {self} with pattern {pattern}")
@@ -161,6 +173,9 @@ class Package:
     def install(self, ids: Optional[list[str]] = None):
         if ids is None:
             ids = [self.id]
+        elif self.id in ids:
+            # not that you are allowed to depend on an old version of yourself
+            raise RecursionError(f"Circular import of {self}")
 
         if self.is_local:
             logging.info(f"Installing local package {self}")
@@ -168,7 +183,6 @@ class Package:
 
             shutil.rmtree(self.install_path, ignore_errors=True)
             shutil.copytree(self.local_path, self.install_path)
-            print(f"Installed {self.reponame} {self.version} by {self.username} into {self.install_path}")
 
         else:
             logging.info(f"Installing gh package {self}")
@@ -191,6 +205,14 @@ class Package:
             shutil.move(extraction_path, self.install_path)
             shutil.rmtree(self.zip_path, ignore_errors=True)
 
+            self.local_path = self.install_path
+            self.resolve_toml_info()
+
+        print(f"Collected {self.deps}")
+        for dep in self.deps:
+            dep.install(ids)
+
+        print(f"Installed {self.reponame} {self.version} by {self.username} into {self.install_path}")
 
 
 def search_for_package(usernames: Optional[list[str] | str] = None,

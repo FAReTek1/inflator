@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import logging
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Optional
 
 from inflator import package
@@ -16,10 +16,10 @@ class IFToml:
     name: Optional[str] = None
     version: Optional[str] = None
 
-    deps: Optional[list[package.Package]] = None
+    deps: list[package.Package] = field(default_factory=list)
 
 
-def parse_gstoml(toml: dict):
+def parse_gstoml(toml: dict, _id: Optional[str] = None):
     logging.info(f"Parsing gstoml {toml}")
     deps = []
 
@@ -39,7 +39,7 @@ def parse_gstoml(toml: dict):
     return IFToml(deps=deps)
 
 
-def parse_iftoml(toml: dict):
+def parse_iftoml(toml: dict, _id: Optional[str] = None):
     logging.info(f"Parsing iftoml {toml}")
     deps = []
     tdeps = toml.get("dependencies", {})
@@ -54,7 +54,7 @@ def parse_iftoml(toml: dict):
             raw, version = value
 
         deps.append(
-            package.Package.from_raw(raw, version=version, importname=name)
+            package.Package.from_raw(raw, version=version, importname=name, _id=_id)
         )
 
     return IFToml(
