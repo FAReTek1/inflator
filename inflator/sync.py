@@ -40,7 +40,7 @@ def sync(path: pathlib.Path):
 
         logging.info(f"Symlinking {sympath} into {dep.install_path}")
 
-        assert dep.install_path.exists()  # You may have spelt something wrong.
+        assert dep.install_path.exists()  # You haven't installed the dependency, or you may have spelt something wrong.
 
         sympath.unlink(missing_ok=True)
         sympath.symlink_to(dep.install_path, target_is_directory=True)
