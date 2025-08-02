@@ -14,6 +14,7 @@ from inflator import package
 class IFToml:
     username: Optional[str] = None
     name: Optional[str] = None
+    version: Optional[str] = None
 
     deps: Optional[list[package.Package]] = None
 
@@ -59,5 +60,6 @@ def parse_iftoml(toml: dict):
     return IFToml(
         username=toml.get("username"),
         name=toml.get("name"),
+        version=toml.get("version"),
         deps=deps
     )

@@ -74,6 +74,10 @@ class Package:
 
         return self
 
+    @property
+    def install_path(self):
+        return APPDATA_FARETEK_PKGS / self.username / self.reponame / self.version
+
     def toml_path(self, name):
         return self.local_path / f"{name}.toml"
 
@@ -95,6 +99,10 @@ class Package:
             if data.name:
                 self.reponame = data.name
                 logging.info(f"{self.reponame=}")
+
+            if data.version:
+                self.version = data.version
+                logging.info(f"{self.version=}")
 
         if self.toml_path("goboscript").exists():
             logging.info("Reading goboscript.toml for info")
@@ -142,13 +150,16 @@ class Package:
         return resp.content
 
     def install(self, ids: Optional[list[str]] = None):
-        print(self)
         if ids is None:
             ids = [self.id]
 
         if self.is_local:
             logging.info(f"Installing local package {self}")
             logging.info(f"Installing into {APPDATA_FARETEK_PKGS}")
+
+            print(self)
+            print(self.install_path)
+
         else:
             logging.info(f"Installing gh package {self}")
 
