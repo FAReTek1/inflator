@@ -23,7 +23,7 @@ def sync(path: pathlib.Path):
     deps = collect(pkg, toplevel=True)
 
     print("Collected:{}"
-          .format(''.join(f"\n- {dep.name}" for dep in deps)))
+          .format(''.join(f"\n- {dep.name}" for dep in deps) if deps else " nothing"))
 
     if not deps:
         print("Nothing to sync, so nothing to do")
