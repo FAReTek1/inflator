@@ -10,10 +10,10 @@
 2. Run `cd inflator`
 3. Run `pip install .`
 
-
 ### Usage
 
-Inflator will try to behave like the old [backpack](https://github.com/aspizu/backpack) version when dealing with `goboscript.toml`.
+Inflator will try to behave like the old [backpack](https://github.com/aspizu/backpack) version when dealing
+with `goboscript.toml`.
 In the future, it will probably not support the current backpack version/syntax.
 
 If you want to integrate your project with inflator, add an `inflator.toml` file to your project.
@@ -24,14 +24,25 @@ This is the file that inflator will look at for config and dependencies.
 Inflator uses a loosely [pip](https://github.com/pypa/pip) inspired syntax.
 
 The command for installing packages is  `inflate install`
+
 - For installing a local package:
-  - Ensure an `inflator.toml` file is provided (see below)
-  - cd to inside your package, to the same level as `inflator.toml`
-  - run `inflate install .`
+    - Ensure an `inflator.toml` file is provided (see below)
+    - cd to inside your package, to the same level as `inflator.toml`
+    - run `inflate install .`
+
 - For installing GitHub packages
-  - run `inflate install <link to github repository>`
-  - Optionally supply a version (tag name):<br>
-    `inflate install <link to github repository> -V <version>`
+    - run `inflate install <link to github repository>`
+    - Optionally supply a version (tag name):<br>
+      `inflate install <link to github repository> -V <version>`
+
+- For local package development
+    - You can install an 'editable' package using the `-e` flag.
+    - `inflate install -e .`
+    - This will store a symlink in your appdata instead of copying the folder, which means that changes to the original
+      package will take effect instantly. This is like how `pip installe -e .` behaves
+
+Inflator will avoid installing packages which have already been installed (same username, reponame and version).
+To override this, use the `-U` flag.
 
 #### Syncing packages/gobos
 
@@ -44,9 +55,9 @@ Inflator.toml syntax:
 # They are only needed if you are making your own package.
 # `username` is only needed to keep locally installed packages linked to a specific user.
 # But it is recommended to always include your username here
-name="<name of your package, e.g. 'projectenv'>"
-version="<version string, e.g. v0.0.0>"
-username="<Your username, e.g. FAReTek1>"
+name = "<name of your package, e.g. 'projectenv'>"
+version = "<version string, e.g. v0.0.0>"
+username = "<Your username, e.g. FAReTek1>"
 
 [dependencies]
 # This is used by any project that has dependencies
@@ -74,21 +85,23 @@ penv-inf = ["projectenv-inflated", "v0.0.2"]
 penv-inf = ["projectenv-inflated", "v0.0.2", "faretek1"]
 ```
 
-If you are creating a package, do not include dependencies which rely on something already being installed 
-(because inflator will try to evaluate them when trying to install your package, and will not be able to find their source)
+If you are creating a package, do not include dependencies which rely on something already being installed
+(because inflator will try to evaluate them when trying to install your package, and will not be able to find their
+source)
 
 </details>
 
 To sync packages:
 > [!NOTE] If you are on windows, you will need permissions to create symlinks
+
 1. cd to your goboscript project
 2. run `inflate`
 3. if you want to do this without cding, do `inflate -i <dir>`
 4. pkgs will end up in `inflate/` or `backpack/` as symlinks
 
-  
 ### development installation
-1. clone the github repository
+
+1. clone the GitHub repository
 2. cd to the repo directory
 3. do `pip install -e .`
 4. you can use inflate using `inflate <args>`
