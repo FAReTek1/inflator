@@ -335,6 +335,10 @@ def search_for_package(usernames: Optional[list[str] | str] = None,
 
                 local_versions += [s for s in possible_symlinks if (path2 / s).is_symlink()]
 
+                # Make newer versions come first.
+                # Because v1.0.0 is before v0.0.0 in alphabetical order, we can just do a reverse string list sort
+                local_versions.sort(reverse=True)
+
                 for version in filter(lambda i: match_l(versions, i.lower()), local_versions):
                     logging.info(f"\tSearching for {version=}")
 
