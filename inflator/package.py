@@ -188,7 +188,19 @@ class Package:
 
         return resp.content
 
-    def install(self, ids: Optional[list[str]] = None, update: bool = False):
+    @property
+    def already_installed(self):
+        pks = search_for_package(self.username, self.reponame, self.version)
+
+        if pks:
+            print("Found {} existing installation(s): {}"
+                  .format(len(pks),
+                          ''.join(f"\n- {pk.name}" for pk in pks)))
+            return True
+
+        return False
+
+    def install(self, ids: Optional[list[str]] = None, editable: bool = False, upgrade: bool = False):
         if ids is None:
             ids = [self.id]
         elif self.id in ids:
@@ -196,15 +208,22 @@ class Package:
             raise RecursionError(f"Circular import of {self}")
 
         if self.is_local:
-            # print(search_for_package(
-            #     self.username, self.reponame, self.version
-            # ))
+            if not upgrade:
+                if self.already_installed:
+                    return
 
             logging.info(f"Installing local package {self}")
             logging.info(f"Installing into {self.install_path}")
 
-            shutil.rmtree(self.install_path, ignore_errors=True)
-            shutil.copytree(self.local_path, self.install_path)
+            if self.install_path.is_symlink():
+                self.install_path.unlink()
+            else:
+                shutil.rmtree(self.install_path, ignore_errors=True)
+
+            if editable:
+                self.install_path.symlink_to(self.local_path)
+            else:
+                shutil.copytree(self.local_path, self.install_path)
 
         else:
             logging.info(f"Installing gh package {self}")
@@ -212,6 +231,10 @@ class Package:
             if not self.version:
                 self.version = "*"
             self.version = self.fetch_tag(self.version)
+
+            if not upgrade:
+                if self.already_installed:
+                    return
 
             zipball = self.fetch_data()
 
@@ -232,7 +255,8 @@ class Package:
 
         print(f"Collected {self.deps}")
         for dep in self.deps:
-            dep.install(ids)
+            # Don't pass in editable.
+            dep.install(ids, upgrade=upgrade)
 
         print(f"Installed {self.name} into {self.install_path}")
 
@@ -304,7 +328,9 @@ def search_for_package(usernames: Optional[list[str] | str] = None,
             logging.info(f"\tSearching for {reponame=}")
 
             path2 = path1 / reponame
-            _, local_versions, _ = next(path2.walk())
+            _, local_versions, possible_symlinks = next(path2.walk())
+
+            local_versions += [s for s in possible_symlinks if (path2 / s).is_symlink()]
 
             for version in filter(lambda i: match_l(versions, i.lower()), local_versions):
                 logging.info(f"\tSearching for {version=}")

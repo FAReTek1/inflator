@@ -40,8 +40,12 @@ def main():
     install_parser.add_argument("parg", nargs="?", help="Package to install")
     install_parser.add_argument("-V", "--version", nargs="?", dest="install_version",
                                 help="Version of package to install. Defaults to newest version")
+    install_parser.add_argument("-e", "--editable", action="store_true", dest="install_editable",
+                                help="For local packages. Whether to install the package as a symlink so that "
+                                     "when you edit it, changes are directly made to your installation")
     install_parser.add_argument("-U", "--upgrade", action="store_true", dest="install_upgrade",
-                                help="Whether to upgrade the package. Default is false. NOT IMPLEMENTED!")
+                                help="Whether to force overwrite packages "
+                                     "instead of just installing ones that dont exist")
     install_parser.add_argument("-r", "--requirements", nargs="?", dest="install_requirements",
                                 help="Path to inflator.toml/goboscript.toml file")
 
@@ -72,9 +76,9 @@ def main():
                         raise ValueError(f"File {f.name!r} is not goboscript.toml or inflator.toml\n{ERROR_MSG}")
 
                 for dep in deps:
-                    dep.install()
+                    dep.install(editable=args.install_editable, upgrade=args.install_upgrade)
             else:
-                install(args.parg, args.install_version, upgrade=args.install_upgrade)
+                install(args.parg, args.install_version, upgrade=args.install_upgrade, editable=args.install_editable)
 
         case "find":
             pks = search_for_package(args.find_username, args.name, args.find_version)
