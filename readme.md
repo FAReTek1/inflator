@@ -10,7 +10,7 @@
 2. Run `cd inflator`
 3. Run `pip install .`
 
-### Usage
+## Usage
 
 Inflator will try to behave like the old [backpack](https://github.com/aspizu/backpack) version when dealing
 with `goboscript.toml`.
@@ -19,7 +19,7 @@ In the future, it will probably not support the current backpack version/syntax.
 If you want to integrate your project with inflator, add an `inflator.toml` file to your project.
 This is the file that inflator will look at for config and dependencies.
 
-#### Installing packages/gobos
+### Installing packages/gobos
 
 Inflator uses a loosely [pip](https://github.com/pypa/pip) inspired syntax.
 
@@ -44,7 +44,7 @@ The command for installing packages is  `inflate install`
 Inflator will avoid installing packages which have already been installed (same username, reponame and version).
 To override this, use the `-U` flag.
 
-#### Syncing packages/gobos
+### Syncing packages/gobos
 
 <details><summary>
 Inflator.toml syntax:
@@ -99,6 +99,22 @@ To sync packages:
 2. run `inflate`
 3. if you want to do this without cding, do `inflate -i <dir>`
 4. pkgs will end up in `inflate/` or `backpack/` as symlinks
+
+### Other commands
+#### inflate find
+This lists out all packages that fit the specified name, username, or version
+
+Syntax:
+inflate find [reponame] -U [username] -V [version]
+
+Globbing is allowed
+You can omit all fields to list out all installed gobos.
+
+#### inflate -V
+Prints out the inflate version
+
+#### inflate -L
+Prints out the path to the log folder
 
 ### development installation
 
