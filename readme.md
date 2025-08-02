@@ -105,10 +105,22 @@ To sync packages:
 This lists out all packages that fit the specified name, username, or version
 
 Syntax:
-inflate find [reponame] -U [username] -V [version]
+`inflate find [reponame] -U [username] -V [version]`
 
 Globbing is allowed
 You can omit all fields to list out all installed gobos.
+
+#### inflate parse
+This prints out what inflator makes of a `goboscript.toml` or `inflator.toml` file.
+Used for development, but you can use it too.
+
+Syntax:
+`inflate parse [filepath]`
+
+#### inflate toml
+This auto generates an `inflator.toml` file for you.
+Recommended to run with `goboscript new <args>`
+Make sure you set your username or else
 
 #### inflate -V
 Prints out the inflate version

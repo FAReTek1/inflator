@@ -16,4 +16,5 @@ APPDATA_FARETEK_PKGS: Final[pathlib.Path] = pathlib.Path(_APPDATA_FARETEK_INFLAT
 APPDATA_FARETEK_ZIPAREA: Final[pathlib.Path] = pathlib.Path(_APPDATA_FARETEK_INFLATE + "\\ziparea")
 
 GITHUB_REPO: Final[str] = "https://github.com/FAReTek1/inflator"
-ERROR_MSG: Final[str] = f"{ansi(31)}-9999 aura 💀{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"
+AURA: Final[str] = "-9999 aura 💀"
+ERROR_MSG: Final[str] = f"{ansi(31)}{AURA}{ansi(0)}\nFile an issue on github: {GITHUB_REPO}"

@@ -14,7 +14,7 @@ from inflator.install import install
 from inflator.parse import parse_gstoml, parse_iftoml
 from inflator.package import search_for_package
 from inflator.sync import sync
-from inflator.util import ERROR_MSG
+from inflator.util import ERROR_MSG, AURA
 
 
 def main():
@@ -63,6 +63,8 @@ def main():
     parse_parser = subparsers.add_parser("parse", help="Parse gstoml or iftoml file")
     parse_parser.add_argument("name", nargs="?", help="Path to goboscript.toml or inflator.toml")  # , dest="find_name")
 
+    parse_parser = subparsers.add_parser("toml", help="Add an inflator.toml file to cwd")
+
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
 
@@ -95,13 +97,28 @@ def main():
                     data = parse_iftoml(tomllib.load(f))
                 pprint.pp(data)
 
+        case "toml":
+            fp = pathlib.Path.cwd() / "inflator.toml"
+            if fp.exists():
+                print("Inflator.toml already exists")
+            else:
+                print(f"creating {fp}")
+                with open(fp, "w", encoding="utf-8") as f:
+                    f.write(f"""\
+# inflator.toml syntax documentation: https://github.com/faretek1/inflator#inflator
+name = {fp.parts[-2]!r}
+version = \"v0.0.0\"
+username = \"if this is left blank then {AURA}\"
+
+[dependencies]
+""")
+
         case _:
             if args.V:
                 print(f"Inflate {__version__}")
             elif args.L:
                 print(f"{log_folder=}")
             else:
-
                 if args.input:
                     cwd = pathlib.Path(args.input)
                 else:
