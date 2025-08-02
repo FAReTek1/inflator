@@ -63,7 +63,7 @@ def main():
     parse_parser = subparsers.add_parser("parse", help="Parse gstoml or iftoml file")
     parse_parser.add_argument("name", nargs="?", help="Path to goboscript.toml or inflator.toml")  # , dest="find_name")
 
-    parse_parser = subparsers.add_parser("toml", help="Add an inflator.toml file to cwd")
+    toml_parser = subparsers.add_parser("toml", help="Add an inflator.toml file to cwd")
 
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
