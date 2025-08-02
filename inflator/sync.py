@@ -25,11 +25,15 @@ def sync(path: pathlib.Path):
     print("Collected:{}"
           .format(''.join(f"\n- {dep.name}" for dep in deps)))
 
-    shutil.rmtree(path / "backpack", ignore_errors=True)
-    shutil.rmtree(path / "inflator", ignore_errors=True)
+    if not deps:
+        print("Nothing to sync, so nothing to do")
+        return
 
     (path / "backpack").mkdir()
     (path / "inflator").mkdir()
+
+    shutil.rmtree(path / "backpack", ignore_errors=True)
+    shutil.rmtree(path / "inflator", ignore_errors=True)
 
     for dep in deps:
         sympath = path / dep.symlink_folder / dep.importname
