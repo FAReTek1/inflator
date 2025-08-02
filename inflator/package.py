@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import fnmatch
 import logging
+import os
 import pathlib
 import hashlib
 import pprint
@@ -17,7 +18,7 @@ import httpx
 
 from furl import furl
 
-from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA
+from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA, APPDATA_FARETEK, APPDATA_FARETEK_INFLATE
 from inflator.parse import parse_iftoml, parse_gstoml
 
 
@@ -221,6 +222,7 @@ class Package:
                 shutil.rmtree(self.install_path, ignore_errors=True)
 
             if editable:
+                os.makedirs(pathlib.Path(*self.install_path.parts[:-1]), exist_ok=True)
                 self.install_path.symlink_to(self.local_path)
             else:
                 shutil.copytree(self.local_path, self.install_path)
@@ -309,35 +311,42 @@ def search_for_package(usernames: Optional[list[str] | str] = None,
     usernames = [u.lower() for u in handle_l(usernames)]
 
     logging.info(f"Searching for {reponames!r} {versions} by {usernames!r}")
-    _, local_usernames, _ = next(APPDATA_FARETEK_PKGS.walk())
+    try:
+        _, local_usernames, _ = next(APPDATA_FARETEK_PKGS.walk())
 
-    results = []
+        results = []
 
-    def match_l(pats, value):
-        if globbed:
-            return not pats or any(fnmatch.fnmatch(value, p) for p in pats)
-        else:
-            return not pats or value in pats
+        def match_l(pats, value):
+            if globbed:
+                return not pats or any(fnmatch.fnmatch(value, p) for p in pats)
+            else:
+                return not pats or value in pats
 
-    for username in filter(lambda i: match_l(usernames, i.lower()), local_usernames):
-        logging.info(f"\tSearching for {username=}")
-        path1 = APPDATA_FARETEK_PKGS / username
-        _, local_reponames, _ = next(path1.walk())
+        for username in filter(lambda i: match_l(usernames, i.lower()), local_usernames):
+            logging.info(f"\tSearching for {username=}")
+            path1 = APPDATA_FARETEK_PKGS / username
+            _, local_reponames, _ = next(path1.walk())
 
-        for reponame in filter(lambda i: match_l(reponames, i.lower()), local_reponames):
-            logging.info(f"\tSearching for {reponame=}")
+            for reponame in filter(lambda i: match_l(reponames, i.lower()), local_reponames):
+                logging.info(f"\tSearching for {reponame=}")
 
-            path2 = path1 / reponame
-            _, local_versions, possible_symlinks = next(path2.walk())
+                path2 = path1 / reponame
+                _, local_versions, possible_symlinks = next(path2.walk())
 
-            local_versions += [s for s in possible_symlinks if (path2 / s).is_symlink()]
+                local_versions += [s for s in possible_symlinks if (path2 / s).is_symlink()]
 
-            for version in filter(lambda i: match_l(versions, i.lower()), local_versions):
-                logging.info(f"\tSearching for {version=}")
+                for version in filter(lambda i: match_l(versions, i.lower()), local_versions):
+                    logging.info(f"\tSearching for {version=}")
 
-                install_path = path2 / version
-                pkg = Package.from_raw(install_path, username=username, reponame=reponame, version=version)
-                results.append(pkg)
+                    install_path = path2 / version
+                    pkg = Package.from_raw(install_path, username=username, reponame=reponame, version=version)
+                    results.append(pkg)
 
-                logging.info(f"\tGot {pkg}")
-    return results
+                    logging.info(f"\tGot {pkg}")
+        return results
+    except StopIteration as e:
+        logging.info(f"Caught exception {e}")
+        logging.info("Making appdata dirs because they don't seem to exist")
+
+        os.makedirs(APPDATA_FARETEK_PKGS)
+        return []
