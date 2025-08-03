@@ -30,6 +30,9 @@ The command for installing packages is  `inflate install`
     - cd to inside your package, to the same level as `inflator.toml`
     - run `inflate install .`
 
+> [!NOTE]
+> You can find public gobos at https://github.com/topics/inflated-goboscript
+
 - For installing GitHub packages
     - run `inflate install <link to github repository>`
     - Optionally supply a version (tag name):<br>
@@ -43,6 +46,11 @@ The command for installing packages is  `inflate install`
 
 Inflator will avoid installing packages which have already been installed (same username, reponame and version).
 To override this, use the `-U` flag.
+
+> [!NOTE]
+> If you are a package developer using inflator, you can upload your gobos to GitHub.
+> Remember to provide `inflator.toml`.
+> Please also add the `inflated-goboscript` tag to your repository 
 
 ### Syncing packages/gobos
 
