@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import sys
 import pathlib
 import shutil
 import stat
@@ -11,8 +12,20 @@ from typing import Final
 def ansi(code):
     return f"\u001b[{code}m"
 
+def _gen_appdata_folder() -> pathlib.Path:
+    un = "faretek"
+    match sys.platform:
+        case "win32":
+            return pathlib.Path(os.getenv('APPDATA')) / un
+        case "linux":
+            return pathlib.Path.home() / f".{un}"
+        case plat:
+            raise NotImplementedError(f"No 'appdata' folder implemented for {plat}")
 
-APPDATA_FARETEK: Final[pathlib.Path] = pathlib.Path(os.getenv('LOCALAPPDATA')) / "faretek"
+
+APPDATA_FARETEK: Final[pathlib.Path] = _gen_appdata_folder()
+
+
 APPDATA_FARETEK_INFLATE: Final[pathlib.Path] = APPDATA_FARETEK / "inflate"
 APPDATA_FARETEK_PKGS: Final[pathlib.Path] = APPDATA_FARETEK_INFLATE / "pkgs"
 APPDATA_FARETEK_ZIPAREA: Final[pathlib.Path] = APPDATA_FARETEK_INFLATE / "ziparea"
