@@ -16,7 +16,7 @@ def toml(cwd: Path = None):
 
     print(f"Creating {fp}")
     fp.write_text(f"""\
-# inflator.toml syntax documentation: https://github.com/faretek1/inflator#inflator
+# inflator.toml syntax documentation: https://github.com/inflated-goboscript/inflator#inflator
 name = "{slugify(fp.parts[-2])}"
 version = "v0.0.0"
 username = "if this is left blank then {AURA}"
