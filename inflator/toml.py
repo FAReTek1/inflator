@@ -22,4 +22,4 @@ version = "v0.0.0"
 username = "if this is left blank then {AURA}"
 
 [dependencies]
-""")
+""", "utf-8")

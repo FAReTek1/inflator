@@ -2,9 +2,10 @@
 
 > Inflate gobos.
 
-### Inflator is a package manager for goboscript
+###### Inflator is a package manager for goboscript
 
-**SEE THE [DOCUMENATION](https://inflated-goboscript.github.io/inflator/)**
+### [documentation](https://inflated-goboscript.github.io/inflator/)
+### [pypi](https://pypi.org/project/inflator/)
 
 ## Installation
 
