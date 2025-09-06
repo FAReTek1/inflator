@@ -134,15 +134,17 @@ class Package:
 
             data = parse_iftoml(tomllib.load(self.toml_file("inflator")), _id)
 
-            if data.username:
+            # prioritise existing data over toml data. e.g. a package may be by inflated-goboscript but registered
+            # as by faretek1
+            if data.username and not self.username:
                 self.username = data.username
                 logging.info(f"{self.username=}")
 
-            if data.name:
+            if data.name and not self.name:
                 self.reponame = data.name
                 logging.info(f"{self.reponame=}")
 
-            if data.version:
+            if data.version and not self.version:
                 self.version = data.version
                 logging.info(f"{self.version=}")
 
@@ -291,6 +293,7 @@ class Package:
             self.local_path = pkg.local_path
 
         logging.info(f"Resolved {self=}")
+        self.resolve_toml_info()
 
         return self
 
