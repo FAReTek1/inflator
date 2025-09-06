@@ -248,7 +248,10 @@ class Package:
             extraction_path = self.zip_path / dirs[0]
             logging.info(f"Moving {extraction_path} to {self.install_path}")
 
-            rmtree(self.install_path, ignore_errors=True)
+            if self.install_path.is_symlink():
+                self.install_path.unlink()
+            else:
+                rmtree(self.install_path, ignore_errors=True)
             shutil.move(extraction_path, self.install_path)
             rmtree(self.zip_path, ignore_errors=True)
 
