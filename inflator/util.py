@@ -6,7 +6,7 @@ import pathlib
 import shutil
 import stat
 
-from typing import Final
+from typing import Final, Optional
 
 
 def ansi(code):

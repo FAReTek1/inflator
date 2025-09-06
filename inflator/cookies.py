@@ -3,6 +3,8 @@ import json
 
 from typing import Any
 
+import github
+
 from inflator.util import APPDATA_FARETEK_COOKIES
 
 
@@ -29,4 +31,13 @@ class _Cookies:
     def __delitem__(self, key: str):
         self.data = {k: v for k, v in self.data.items() if k != key}
 
+    def __contains__(self, item):
+        return item in self.data
+
+    def get(self, __key: str, __default=None):
+        return self.data.get(__key, __default)
+
+
 cookies = _Cookies()
+
+gh = github.Github(cookies.get("auth-token"))

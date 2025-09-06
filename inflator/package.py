@@ -20,6 +20,7 @@ from furl import furl
 
 from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA, rmtree
 from inflator.parse import parse_iftoml, parse_gstoml
+from inflator.cookies import gh
 from inflator import gtp
 
 
@@ -164,14 +165,12 @@ class Package:
 
         logging.info(f"Fetching version name from github for {self}")
 
-        tags: list[dict[str, Any]] = (httpx.get(f"https://api.github.com/repos/{self.username}/{self.reponame}/tags")
-                                      .raise_for_status()
-                                      .json())
+        tags = gh.get_repo(f"{self.username}/{self.reponame}").get_tags()
 
         logging.info(f"Collected tags: {pprint.pformat(tags)}")
 
         for tag in tags:
-            name = tag["name"]
+            name = tag.name
             if fnmatch.fnmatch(name, pattern):
                 logging.info(f"Matched tag: {name}")
                 return name
@@ -180,7 +179,7 @@ class Package:
             raise ValueError("No tags to match against.")
         else:
             raise ValueError("Matching tag could not be found, but alternatives available. Consider choosing {!r}"
-                             .format(tags[-1]["name"]))
+                             .format(tags[-1].name))
 
     def fetch_data(self):
         logging.info(f"Trying to download {self} from gh")
