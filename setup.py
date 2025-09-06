@@ -1,5 +1,9 @@
+from pathlib import Path
+
 import setuptools
 from inflator import __version__
+
+fdir = (Path(__file__) / '..').resolve()
 
 setuptools.setup(
     name="inflate",
@@ -15,10 +19,10 @@ setuptools.setup(
     author="faretek1",
     description="Inflates gobos. A goboscript package manager.",
     long_description_content_type="text/markdown",
-    long_description=open("readme.md").read(),
-    install_requires=open("requirements.txt").read(),
+    long_description=(fdir / "readme.md").read_text(),
+    install_requires=(fdir / "requirements.txt").read_text(),
     keywords=["goboscript"],
     project_urls={
-        "Source": "https://github.com/FAReTek1/inflator",
+        "Source": "https://github.com/inflated-goboscript/inflator",
     }
 )
