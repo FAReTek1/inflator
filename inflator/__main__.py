@@ -11,6 +11,7 @@ from datetime import datetime
 
 from inflator import __version__
 from inflator.install import install
+from inflator.new import new as inflator_new
 from inflator.parse import parse_gstoml, parse_iftoml
 from inflator.package import search_for_package
 from inflator.sync import sync
@@ -65,6 +66,9 @@ def main():
 
     toml_parser = subparsers.add_parser("toml", help="Add an inflator.toml file to cwd")
 
+    new_parser = subparsers.add_parser("new", help="Create an (inflated) goboscript project")
+    new_parser.add_argument("name", nargs="?", help="Name of package/repository")
+
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
 
@@ -112,8 +116,11 @@ username = \"if this is left blank then {AURA}\"
 
 [dependencies]
 """)
+        case "new":
+            inflator_new(args.name)
 
-        case _:
+        case None:
+            # no args
             if args.V:
                 print(f"Inflate {__version__}")
             elif args.L:
@@ -125,3 +132,6 @@ username = \"if this is left blank then {AURA}\"
                     cwd = pathlib.Path.cwd()
 
                 sync(cwd)
+
+        case _:
+            print(f"Unknown command: {args.command!r}")
