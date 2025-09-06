@@ -20,6 +20,7 @@ from furl import furl
 
 from inflator.util import APPDATA_FARETEK_PKGS, APPDATA_FARETEK_ZIPAREA, rmtree
 from inflator.parse import parse_iftoml, parse_gstoml
+from inflator import gtp
 
 
 @dataclass
@@ -61,10 +62,19 @@ class Package:
             is_local = False
         else:
             local_path = pathlib.Path(raw).resolve()
+            if local_path.exists():
+                _username = None
+                _reponame = local_path.parts[-1]
+                is_local = True
+            else:
+                # try and fetch from the gtp
+                print("Loading from gtp: ")
+                data = gtp.load()
+                if raw in data:
+                    return cls.from_raw(data[raw], importname=importname, username=username, reponame=reponame, version=version, _id=_id)
+                else:
+                    raise FileNotFoundError(f"File {raw} not found")
 
-            _username = None
-            _reponame = local_path.parts[-1]
-            is_local = True
         self = cls(
             username=_username,
             reponame=_reponame,
