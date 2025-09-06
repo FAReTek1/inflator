@@ -9,7 +9,7 @@ import httpx
 
 
 def load():
-    raw_data: Optional[str] = (httpx.get("https://api.github.com/repos/faretek1/inflate-gtp/contents/gtp.json")
+    raw_data: Optional[str] = (httpx.get("https://api.github.com/repos/inflated-goboscript/gtp/contents/gtp.json")
                                .raise_for_status()
                                .json()
                                .get("content"))
