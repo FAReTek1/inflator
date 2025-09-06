@@ -71,7 +71,7 @@ class Package:
                 print("Loading from gtp: ")
                 data = gtp.load()
                 if raw in data:
-                    return cls.from_raw(data[raw], importname=importname, username=username, reponame=reponame, version=version, _id=_id)
+                    return cls.from_raw(data[raw]["url"], importname=importname, username=username, reponame=reponame, version=version, _id=_id)
                 else:
                     raise FileNotFoundError(f"File {raw} not found")
 

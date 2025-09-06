@@ -8,7 +8,7 @@ from base64 import b64decode
 import httpx
 
 
-def load():
+def load() -> dict[str, dict[str, str]]:
     raw_data: Optional[str] = (httpx.get("https://api.github.com/repos/inflated-goboscript/gtp/contents/gtp.json")
                                .raise_for_status()
                                .json()
