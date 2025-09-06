@@ -16,6 +16,7 @@ from inflator.parse import parse_gstoml, parse_iftoml
 from inflator.package import search_for_package
 from inflator.sync import sync
 from inflator.util import ERROR_MSG, AURA
+from inflator.toml import toml as inflator_toml
 
 
 def main():
@@ -102,20 +103,8 @@ def main():
                 pprint.pp(data)
 
         case "toml":
-            fp = pathlib.Path.cwd() / "inflator.toml"
-            if fp.exists():
-                print("Inflator.toml already exists")
-            else:
-                print(f"creating {fp}")
-                with open(fp, "w", encoding="utf-8") as f:
-                    f.write(f"""\
-# inflator.toml syntax documentation: https://github.com/faretek1/inflator#inflator
-name = {fp.parts[-2]!r}
-version = \"v0.0.0\"
-username = \"if this is left blank then {AURA}\"
+            inflator_toml()
 
-[dependencies]
-""")
         case "new":
             inflator_new(args.name)
 

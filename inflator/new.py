@@ -6,6 +6,8 @@ from typing import Optional
 
 from slugify import slugify
 
+from inflator.toml import toml as inflator_toml
+
 
 def new(name: Optional[str] = None):
     if name is None:
@@ -21,5 +23,6 @@ def new(name: Optional[str] = None):
     print(f"Making {name!r}, dir={output_dir}")
 
     assert shutil.which("goboscript"), "You need to install goboscript: https://github.com/aspizu/goboscript/"
-    subprocess.run(["goboscript", "new", "-n", f"{name}"], cwd=str(goboscript_output_dir))
-
+    if subprocess.call(["goboscript", "new", "-n", f"{name}"], cwd=str(goboscript_output_dir)) \
+        == 0:
+        inflator_toml(output_dir)
