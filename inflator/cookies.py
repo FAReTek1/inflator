@@ -13,7 +13,7 @@ class _Cookies:
             APPDATA_FARETEK_COOKIES.write_text("{}")
 
     @property
-    def data(self):
+    def data(self) -> dict[str, str | int | None | bool | float | list | dict[str, Any]]:
         return json.load(APPDATA_FARETEK_COOKIES.open())
 
     @data.setter
@@ -26,5 +26,7 @@ class _Cookies:
     def __getitem__(self, key):
         return self.data[key]
 
+    def __delitem__(self, key: str):
+        self.data = {k: v for k, v in self.data.items() if k != key}
 
 cookies = _Cookies()

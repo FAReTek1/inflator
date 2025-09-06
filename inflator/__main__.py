@@ -17,6 +17,7 @@ from inflator.package import search_for_package
 from inflator.sync import sync
 from inflator.util import ERROR_MSG, AURA
 from inflator.toml import toml as inflator_toml
+from inflator.cookies import cookies
 
 
 def main():
@@ -70,6 +71,10 @@ def main():
     new_parser = subparsers.add_parser("new", help="Create an (inflated) goboscript project")
     new_parser.add_argument("name", nargs="?", help="Name of package/repository")
 
+    set_parser = subparsers.add_parser("set", help="Set config in cookies.json")
+    set_parser.add_argument("key", help="Key of cookie")
+    set_parser.add_argument("value", nargs='?', help="Value of cookie. Set empty to delete")
+
     # args, _ = parser.parse_known_args()
     args = parser.parse_args()
 
@@ -107,6 +112,13 @@ def main():
 
         case "new":
             inflator_new(args.name)
+        case "set":
+            if args.value is None:
+                print(f"Deleting {args.key!r}")
+                del cookies[args.key]
+            else:
+                print(f"seting {args.key!r}={args.value!r}")
+                cookies[args.key] = args.value
 
         case None:
             # no args
