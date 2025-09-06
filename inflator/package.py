@@ -34,7 +34,6 @@ class Package:
     is_local: Optional[bool] = None
     backpack_only: Optional[bool] = None
 
-    _resolved_version: Optional[str] = None
     deps: list[Package] = field(default_factory=list)
 
     @property
