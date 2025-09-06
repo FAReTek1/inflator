@@ -20,5 +20,7 @@ setuptools.setup(
     keywords=["goboscript"],
     project_urls={
         "Source": "https://github.com/inflated-goboscript/inflator",
+        "Documentation": "https://inflated-goboscript.github.io/inflator/",
+        "Homepage": "https://inflated-goboscript.github.io/inflator/"
     }
 )

@@ -4,6 +4,8 @@
 
 ### Inflator is a package manager for goboscript
 
+**SEE THE [DOCUMENATION](https://inflated-goboscript.github.io/inflator/)**
+
 ## Installation
 
 1. Clone the repository
