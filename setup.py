@@ -6,7 +6,7 @@ from inflator import __version__
 fdir = (Path(__file__) / '..').resolve()
 
 setuptools.setup(
-    name="inflate",
+    name="inflator",
     version=__version__,
     packages=setuptools.find_packages(),
 
