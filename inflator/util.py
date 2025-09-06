@@ -27,6 +27,7 @@ APPDATA_FARETEK: Final[pathlib.Path] = _gen_appdata_folder()
 
 
 APPDATA_FARETEK_INFLATE: Final[pathlib.Path] = APPDATA_FARETEK / "inflate"
+APPDATA_FARETEK_COOKIES: Final[pathlib.Path] = APPDATA_FARETEK_INFLATE / "cookies.json"
 APPDATA_FARETEK_PKGS: Final[pathlib.Path] = APPDATA_FARETEK_INFLATE / "pkgs"
 APPDATA_FARETEK_ZIPAREA: Final[pathlib.Path] = APPDATA_FARETEK_INFLATE / "ziparea"
 
