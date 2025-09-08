@@ -23,6 +23,6 @@ def new(name: Optional[str] = None):
     print(f"Making {name!r}, dir={output_dir}")
 
     assert shutil.which("goboscript"), "You need to install goboscript: https://github.com/aspizu/goboscript/"
-    if subprocess.call(["goboscript", "new", "-n", f"{name}"], cwd=str(goboscript_output_dir)) \
+    if subprocess.call(["goboscript", "new", f"{name}"], cwd=str(goboscript_output_dir)) \
         == 0:
         inflator_toml(output_dir)
